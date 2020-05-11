@@ -27,17 +27,16 @@
 module.exports = {
   extends: ["../.eslintrc.js"],
   parserOptions: {
-		sourceType: "module"
-	},
+    sourceType: "module",
+  },
   overrides: [
     {
       files: ["*.test.js"],
       extends: ["plugin:jest/recommended"],
       env: {
         node: true,
-        jest: true
-      }
-    }
-  ]
-}
-
+        jest: true,
+      },
+    },
+  ],
+};

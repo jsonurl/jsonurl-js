@@ -25,37 +25,33 @@
 "use strict";
 
 /*
-  This defines global options. The ./src and ./test directories extend
-  this file.
+  This defines global options. The ./src directory extends this file.
 */
 
-const esmConfigFiles = [
-  "rollup.config.js"
-]
+const esmConfigFiles = ["rollup.config.js"];
 
 module.exports = {
   root: true,
   extends: ["eslint:recommended", "plugin:prettier/recommended"],
   env: {
-    es6: true
+    es6: true,
   },
-  ignorePatterns: ["node_modules/", "dist/", "backup/"],
+  ignorePatterns: ["node_modules/", "dist/", "backup/", "apidoc/"],
   rules: {
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
   },
   overrides: [
     {
       files: esmConfigFiles,
       parserOptions: {
-        sourceType: "module"
-      }
+        sourceType: "module",
+      },
     },
     {
-      files: ["*.config.js"],
+      files: ["*.config.js", ".eslintrc.js"],
       env: {
-        node: true
-      }
-    }
-  ]
-}
-
+        node: true,
+      },
+    },
+  ],
+};
