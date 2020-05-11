@@ -1,0 +1,54 @@
+{
+  "name": "jsonurl",
+  "version": "1.0.0",
+  "description": "JSON->URL defines a text format for the JSON data model suitable for use within a URL/URI (as described by RFC3986).",
+  "main": "dist/jsonurl.common.js",
+  "module": "dist/jsonurl.esm.js",
+  "browser": "dist/jsonurl.min.js",
+  "moduleName": "JsonURL",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "jest",
+    "lint": "env DEBUG=eslint:cli-engine eslint .",
+    "jsdoc": "jsdoc -c jsdoc.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsonurl/jsonurl-js.git"
+  },
+  "keywords": [
+    "JSON->URL",
+    "json",
+    "url",
+    "uri"
+  ],
+  "author": "David MacCormack",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jsonurl/jsonurl-js/issues"
+  },
+  "homepage": "https://github.com/jsonurl/jsonurl-js#readme",
+  "devDependencies": {
+    "@babel/preset-env": "^7.9.6",
+    "@rollup/plugin-commonjs": "^11.1.0",
+    "@rollup/plugin-node-resolve": "^7.1.3",
+    "babel-cli": "^6.26.0",
+    "babel-jest": "^26",
+    "editorconfig": "^0.15.3",
+    "eslint": "^7",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-jest": "^23.10.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "jest": "^26",
+    "jsdoc": "^3.6.4",
+    "prettier": "^2.0.5",
+    "rollup": "^2.8.2",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-eslint": "^7",
+    "rollup-plugin-terser": "^5.3.0"
+  },
+  "browserslist": "defaults",
+  "files": [
+    "dist"
+  ]
+}

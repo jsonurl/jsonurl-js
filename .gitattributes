@@ -1,0 +1,19 @@
+# default to binary
+#* binary
+
+# HTML, CSS, etc
+*.css		text diff=css eol=lf
+*.htm		text diff=html eol=lf
+*.html		text diff=html eol=lf
+*.js		text eol=lf
+*.json		text eol=lf
+
+# General text
+*.xml		text eol=lf
+*.md		text eol=lf
+.gitattributes	text eol=lf
+.gitignore	text eol=lf
+
+# Binary
+*.gz            binary
+
