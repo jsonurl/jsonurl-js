@@ -5,6 +5,9 @@ node_modules/
 dist/
 coverage/
 
+# jsdoc output
+apidoc/
+
 # Eclipse
 .project
 .settings/
