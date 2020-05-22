@@ -9,10 +9,28 @@ However, POST is suboptimal for requests which do not modify a resource's
 state. JSON&#x2192;URL defines a text format for the JSON data model suitable
 for use within a [URL][RFC1738]/[URI][RFC3986].
 
-## The JavaScript API
+## Usage
 JSON&#x2192;URL is available as a commonjs module (suitable for use in Node), ES6
-module, or a script that may be used directly in a browser. The API is the
-same for all three.
+module, or a script that may be used directly in a browser.
+
+### CJS
+```js
+const JsonURL = require("@jsonurl/jsonurl");
+```
+### ES6
+```js
+import JsonURL from "@jsonurl/jsonurl";
+```
+### Browser script tag
+```html
+<script
+    src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.0.0/dist/jsonurl.min.js"
+    integrity="sha384-8tLcpqfENLTqlnqIfsn3sokUQIe6vEu3kx2Sw1D+VKKCwnzPy2C2n837+blkJG8F"
+    crossorigin="anonymous"></script>
+```
+
+### The JavaScript API
+Once included, the API is the same for all three.
 ```js
 let p = new JsonURL();
 let value = p.parse( "(Hello:World!)" );
