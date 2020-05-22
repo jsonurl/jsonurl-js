@@ -1,0 +1,50 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: ci
+
+on:
+  push:
+    paths-ignore:
+    - '**.gitattributes'
+    - '**.gitignore'
+    - '**.md'
+  pull_request:
+    paths-ignore:
+    - '**.gitattributes'
+    - '**.gitignore'
+    - '**.md'
+
+jobs:
+  artifact:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - run: npm ci
+    - run: npm run lint
+    - run: npm run build
+    - run: npm test
+
+  matrix-build:
+    needs: artifact
+    if: needs.artifact.result == 'success'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        node-version: [10.x, 12.x]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Node.js  ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - run: npm run lint
+    - run: npm run build
+    - run: npm test
