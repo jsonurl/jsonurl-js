@@ -1,5 +1,6 @@
 # JSON&#x2192;URL
-[![License: MIT](https://img.shields.io/github/license/jsonurl/jsonurl-js.svg?label=License)][license]
+[![License: MIT](https://img.shields.io/github/license/jsonurl/jsonurl-js.svg?label=License)][![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js?ref=badge_shield)
+[license]
 
 ## About
 [RFC8259][RFC8259] describes the JSON data model and interchange format, which is widely
@@ -29,3 +30,7 @@ set by default.
 [RFC3986]: https://tools.ietf.org/html/rfc3986
 [RFC1738]: https://tools.ietf.org/html/rfc1738
 [license]: https://opensource.org/licenses/MIT
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js?ref=badge_large)
