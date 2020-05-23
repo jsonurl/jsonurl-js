@@ -1,5 +1,7 @@
 # JSON&#x2192;URL
 [![License: MIT](https://img.shields.io/github/license/jsonurl/jsonurl-js.svg?label=License)][license]
+[![NPM version](https://img.shields.io/npm/v/@jsonurl/jsonurl.svg)](https://www.npmjs.com/package/@jsonurl/jsonurl)
+![CI](https://github.com/jsonurl/jsonurl-js/workflows/ci/badge.svg?branch=master)
 
 ## About
 [RFC8259][RFC8259] describes the JSON data model and interchange format, which is widely
