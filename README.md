@@ -2,6 +2,7 @@
 [![License: MIT](https://img.shields.io/github/license/jsonurl/jsonurl-js.svg?label=License)][license]
 [![NPM version](https://img.shields.io/npm/v/@jsonurl/jsonurl.svg)](https://www.npmjs.com/package/@jsonurl/jsonurl)
 ![CI](https://github.com/jsonurl/jsonurl-js/workflows/ci/badge.svg?branch=master)
+[![Known Vulnerabilities](https://snyk.io/test/github/jsonurl/jsonurl-js/badge.svg?targetFile=package.json)](https://snyk.io/test/github/jsonurl/jsonurl-js?targetFile=package.json)
 
 ## About
 [RFC8259][RFC8259] describes the JSON data model and interchange format, which is widely
