@@ -19,9 +19,11 @@ on:
 jobs:
   artifact:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
+    - name: Set artifact version
+      run: script/version_snapshot.sh
+      shell: bash
     - name: Use Node.js 12.x
       uses: actions/setup-node@v1
       with:
@@ -40,7 +42,7 @@ jobs:
     - run: npm run build
     - run: npm test
     - name: Package artifacts
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v2
       if: success()
       with:
         name: jsonurl-javascript
@@ -73,3 +75,40 @@ jobs:
     - run: npm run lint
     - run: npm run build
     - run: npm test
+
+  snyk:
+    needs: artifact
+    if: |
+        needs.artifact.result == 'success'
+          && secrets.SNYK_TOKEN != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set artifact version
+        run: script/version_snapshot.sh
+        shell: bash
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+
+  sonarcloud:
+    needs: artifact
+    if: |
+        needs.artifact.result == 'success'
+          && secrets.SONAR_TOKEN != ''
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Set artifact version
+      run: script/version_snapshot.sh
+      shell: bash
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
