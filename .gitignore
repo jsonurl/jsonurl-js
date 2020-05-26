@@ -17,3 +17,5 @@ apidoc/
 
 # Misc
 backup/
+*.swp
+
