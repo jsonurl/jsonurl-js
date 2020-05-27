@@ -3,6 +3,7 @@
 [![NPM version](https://img.shields.io/npm/v/@jsonurl/jsonurl.svg)](https://www.npmjs.com/package/@jsonurl/jsonurl)
 ![CI](https://github.com/jsonurl/jsonurl-js/workflows/ci/badge.svg?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/jsonurl/jsonurl-js/badge.svg?targetFile=package.json)](https://snyk.io/test/github/jsonurl/jsonurl-js?targetFile=package.json)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js?ref=badge_shield)
 
 ## About
 [RFC8259][RFC8259] describes the JSON data model and interchange format, which is widely
@@ -16,11 +17,16 @@ for use within a [URL][RFC1738]/[URI][RFC3986].
 JSON&#x2192;URL is available as a commonjs module (suitable for use in Node), ES6
 module, or a script that may be used directly in a browser.
 
+### NPM install
+```sh
+npm install @jsonurl/jsonurl --save
+```
+
 ### CJS
 ```js
 const JsonURL = require("@jsonurl/jsonurl");
 ```
-### ES6
+### ES6 (Node + Babel)
 ```js
 import JsonURL from "@jsonurl/jsonurl";
 ```
@@ -39,6 +45,8 @@ let p = new JsonURL();
 let value = p.parse( "(Hello:World!)" );
 ```
 There are options available, but that's all you need to get started.
+
+JSON&#x2192;URL has no runtime dependencies.
 
 ## Security
 The parser is designed to parse untrusted input. It supports limits on
