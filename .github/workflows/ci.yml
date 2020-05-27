@@ -76,29 +76,11 @@ jobs:
     - run: npm run build
     - run: npm test
 
-  snyk:
-    needs: artifact
-    if: |
-        needs.artifact.result == 'success'
-          && secrets.SNYK_TOKEN != ''
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set artifact version
-        run: script/version_snapshot.sh
-        shell: bash
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor
-
   sonarcloud:
     needs: artifact
     if: |
         needs.artifact.result == 'success'
-          && secrets.SONAR_TOKEN != ''
+          && github.repository_owner == 'jsonurl'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
