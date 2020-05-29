@@ -10,7 +10,9 @@
     "build": "rollup -c",
     "test": "jest",
     "lint": "env DEBUG=eslint:cli-engine eslint .",
-    "jsdoc": "jsdoc -c jsdoc.config.js"
+    "jsdoc": "jsdoc -c jsdoc.config.js",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -50,5 +52,9 @@
   "browserslist": "defaults",
   "files": [
     "dist"
-  ]
+  ],
+  "snyk": true,
+  "dependencies": {
+    "snyk": "^1.332.0"
+  }
 }
