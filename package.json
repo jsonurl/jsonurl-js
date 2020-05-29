@@ -1,6 +1,6 @@
 {
   "name": "@jsonurl/jsonurl",
-  "version": "1.0.0",
+  "version": "1.0.0-SNAPSHOT",
   "description": "JSON->URL defines a text format for the JSON data model suitable for use within a URL/URI (as described by RFC3986).",
   "main": "dist/jsonurl.common.js",
   "module": "dist/jsonurl.esm.js",
