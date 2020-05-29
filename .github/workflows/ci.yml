@@ -32,7 +32,7 @@ jobs:
       timeout-minutes: 10
       uses: actions/cache@v1
       with:
-        path: ~/.npm 
+        path: ~/.npm
         key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.OS }}-node-
@@ -89,6 +89,23 @@ jobs:
     - name: Set artifact version
       run: script/version_snapshot.sh
       shell: bash
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - name: Cache Node.js modules
+      timeout-minutes: 10
+      uses: actions/cache@v1
+      with:
+        path: ~/.npm
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-
+          ${{ runner.OS }}-
+    - run: npm ci
+    - run: npm run lint
+    - run: npm run build
+    - run: npm test
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
       env:
