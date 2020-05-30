@@ -27,7 +27,7 @@
   "bugs": {
     "url": "https://github.com/jsonurl/jsonurl-js/issues"
   },
-  "homepage": "https://github.com/jsonurl/jsonurl-js#readme",
+  "homepage": "https://www.jsonurl.org/",
   "devDependencies": {
     "@babel/preset-env": "^7.9.6",
     "@rollup/plugin-commonjs": "^11.1.0",
