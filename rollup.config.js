@@ -45,6 +45,12 @@ export default [
         file: "dist/jsonurl.js",
         format: "umd",
       },
+    ],
+    plugins: [resolve(), commonjs(), babel()],
+  },
+  {
+    input: "src/main.js",
+    output: [
       {
         name: pkg.moduleName,
         file: pkg.browser,
@@ -52,12 +58,7 @@ export default [
         banner: banner,
       },
     ],
-    plugins: [
-      resolve(),
-      commonjs(),
-      babel(),
-      terser({ include: [/^.+\.min\.js$/] }),
-    ],
+    plugins: [resolve(), commonjs(), babel(), terser()],
   },
   {
     input: "src/main.js",
