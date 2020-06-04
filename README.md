@@ -33,7 +33,7 @@ import JsonURL from "@jsonurl/jsonurl";
 ### Browser script tag
 ```html
 <script
-    src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.0.0/dist/jsonurl.min.js"
+    src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.0.0"
     integrity="sha384-8tLcpqfENLTqlnqIfsn3sokUQIe6vEu3kx2Sw1D+VKKCwnzPy2C2n837+blkJG8F"
     crossorigin="anonymous"></script>
 ```
