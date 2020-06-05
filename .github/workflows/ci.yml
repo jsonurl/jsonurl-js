@@ -103,7 +103,7 @@ jobs:
           ${{ runner.OS }}-node-
           ${{ runner.OS }}-
     - run: npm ci
-    - run: npm run lint
+    - run: npx eslint -f json -o eslint.report.json
     - run: npm run build
     - run: npm test
     - name: SonarCloud Scan
