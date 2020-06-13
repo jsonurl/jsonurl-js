@@ -68,6 +68,13 @@ const CHAR_s = 0x73;
 const CHAR_t = 0x74;
 const CHAR_u = 0x75;
 
+const STATE_PAREN = 1;
+const STATE_IN_ARRAY = 2;
+const STATE_ARRAY_AFTER_ELEMENT = 3;
+const STATE_OBJECT_HAVE_KEY = 4;
+const STATE_OBJECT_AFTER_ELEMENT = 5;
+const STATE_IN_OBJECT = 6;
+
 const ERR_MSG_EXPECT_STRUCTCHAR =
   "JSON->URL: expected comma, open paren, or close paren";
 const ERR_MSG_EXPECT_VALUE = "JSON->URL: expected value";
@@ -378,9 +385,116 @@ Object.defineProperty(String.prototype, "toJsonURLText", {
 });
 
 /**
+ * A class for managing values during parse
+ */
+class StateStack extends Array {
+  constructor(parser) {
+    super();
+    this.parser = parser;
+    this._depth = 0;
+  }
+
+  /**
+   * Replace the current state with R and push state P.
+   * @param s replacement state
+   * @param p state to push
+   */
+  replaceAndPush(pos, r, p) {
+    this[this._depth] = r;
+
+    if (++this._depth >= this.parser.maxParseDepth) {
+      throw new Error(errorMessage(ERR_MSG_LIMIT_MAXDEPTH, pos));
+    }
+
+    this.push(p);
+  }
+
+  /**
+   * Replace the current state with R.
+   * @param r replacement state
+   */
+  replace(r) {
+    this[this._depth] = r;
+  }
+
+  /**
+   * Get current depth, optionally popping the top of the stack.
+   */
+  depth(pop = false) {
+    if (pop) {
+      this._depth--;
+      this.pop();
+    }
+    return this._depth;
+  }
+}
+
+/**
+ * A class for managing values during parse
+ */
+class ValueStack extends Array {
+  constructor(parser) {
+    super();
+    this.parser = parser;
+    this.numValues = 0;
+  }
+
+  /**
+   * Pop an object key/value off the stack and assign the value in a target.
+   * @returns the target
+   */
+  popObjectValue(value) {
+    value = value || this.pop();
+    let key = this.pop();
+    let target = this[this.length - 1];
+
+    target[key] = value;
+
+    return target;
+  }
+
+  /**
+   * Pop a value off the stack and append it to a target.
+   * @returns the target
+   */
+  popArrayValue(value) {
+    value = value || this.pop();
+    let target = this[this.length - 1];
+
+    target.push(value);
+
+    return target;
+  }
+
+  /**
+   * Check the currect value count against the configured maximum
+   * @param {number} pos the position of the value in the text
+   * @param {number} count the increment value
+   */
+  checkValueLimit(pos, count = 1) {
+    this.numValues += count;
+
+    if (this.numValues > this.parser.maxParseValues + 1) {
+      throw new Error(errorMessage(ERR_MSG_LIMIT_MAXVALUES, pos));
+    }
+  }
+
+  /**
+   * Append an array value, checking the current value count against the maximum.
+   * @param {number} pos the position of the value in the text
+   * @param {*} value the value to append
+   * @param {number} count number of new values to check against the maximum
+   */
+  appendArrayValue(pos, value, count = 1) {
+    this.checkValueLimit(pos, count);
+    this.push(value);
+  }
+}
+
+/**
  * A class for parsing JSON->URL text.
  */
-export default class JsonURL {
+class JsonURL {
   /**
    * Construct a new JsonURL class.
    * @param {Object} prop Initialization properties.
@@ -413,13 +527,19 @@ export default class JsonURL {
     }
 
     this.maxParseDepth =
-      typeof prop !== "number" ? 1 << 5 : parseInt(prop.maxParseDepth);
+      typeof prop.maxParseDepth === "number"
+        ? parseInt(prop.maxParseDepth)
+        : 1 << 5;
 
     this.maxParseValues =
-      typeof prop !== "number" ? 1 << 12 : parseInt(prop.maxParseValues);
+      typeof prop.maxParseValues === "number"
+        ? parseInt(prop.maxParseValues)
+        : 1 << 12;
 
     this.maxParseChars =
-      typeof prop !== "number" ? 1 << 15 : parseInt(prop.maxParseChars);
+      typeof prop.maxParseChars === "number"
+        ? parseInt(prop.maxParseChars)
+        : 1 << 15;
 
     this.emptyValue = prop.emptyValue === undefined ? {} : prop.emptyValue;
 
@@ -524,27 +644,30 @@ export default class JsonURL {
    * @throws Error if a limit given in the constructor (or its default)
    * is exceeded.
    */
-  parse(text) {
+  parse(text, options = {}) {
     text = String(text);
 
-    var end = text.length;
+    let end = text.length;
 
     if (end === 0) {
       return undefined;
     }
 
-    const STATE_PAREN = 1;
-    const STATE_IN_ARRAY = 2;
-    const STATE_ARRAY_AFTER_ELEMENT = 3;
-    const STATE_OBJECT_HAVE_KEY = 4;
-    const STATE_OBJECT_AFTER_ELEMENT = 5;
-    const STATE_IN_OBJECT = 6;
-
     if (end > this.maxParseChars) {
       throw new Error(ERR_MSG_LIMIT_MAXCHARS);
     }
 
-    if (text.charCodeAt(0) !== CHAR_PAREN_OPEN) {
+    let valueStack = new ValueStack(this);
+    let stateStack = new StateStack(this);
+    let pos = 0;
+
+    if (options.impliedObject) {
+      valueStack.push(options.impliedObject);
+      stateStack.push(STATE_IN_OBJECT);
+    } else if (options.impliedArray) {
+      valueStack.push(options.impliedArray);
+      stateStack.push(STATE_IN_ARRAY);
+    } else if (text.charCodeAt(0) !== CHAR_PAREN_OPEN) {
       //
       // not composite; parse as a single literal value
       //
@@ -561,23 +684,24 @@ export default class JsonURL {
       }
 
       return this.parseLiteral(text, 0, end, false);
+    } else {
+      stateStack.push(STATE_PAREN);
+      pos = 1;
     }
-
-    var numValues = 0;
-    var pos = 1;
-    var depth = 0;
-    var valueStack = [];
-    var stateStack = [STATE_PAREN];
 
     for (;;) {
       if (pos === end) {
         throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, pos));
       }
-      var c = text.charCodeAt(pos);
 
-      var sval, lvpos;
+      let c = text.charCodeAt(pos);
 
-      switch (stateStack[depth]) {
+      //
+      // literal value and literal value position
+      //
+      let lv, lvpos;
+
+      switch (stateStack[stateStack.depth()]) {
         case STATE_PAREN:
           switch (c) {
             case CHAR_PAREN_OPEN:
@@ -586,20 +710,19 @@ export default class JsonURL {
               // I set the current state and value and also push
               // the "new" state on to the state stack.
               //
-              if (++numValues > this.maxParseValues) {
-                throw new Error(errorMessage(ERR_MSG_LIMIT_MAXVALUES, pos));
-              }
-              stateStack[depth] = STATE_ARRAY_AFTER_ELEMENT;
-              valueStack.push([]);
-              stateStack.push(STATE_PAREN);
-              if (++depth > this.maxParseDepth) {
-                throw new Error(errorMessage(ERR_MSG_LIMIT_MAXDEPTH, pos));
-              }
+              valueStack.appendArrayValue(pos, []);
+
+              stateStack.replaceAndPush(
+                pos,
+                STATE_ARRAY_AFTER_ELEMENT,
+                STATE_PAREN
+              );
+
               pos++;
               continue;
 
             case CHAR_PAREN_CLOSE:
-              if (--depth === -1) {
+              if (stateStack.depth(true) === -1) {
                 if (pos + 1 != end) {
                   throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
                 }
@@ -608,11 +731,8 @@ export default class JsonURL {
                 }
                 return valueStack[0];
               }
-              if (++numValues > this.maxParseValues) {
-                throw new Error(errorMessage(ERR_MSG_LIMIT_MAXVALUES, pos));
-              }
-              stateStack.pop();
-              valueStack.push(newEmptyValue(this));
+
+              valueStack.appendArrayValue(pos, newEmptyValue(this));
               pos++;
               continue;
 
@@ -628,12 +748,14 @@ export default class JsonURL {
           if (lvpos === end) {
             throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, end));
           }
-          if (++numValues > this.maxParseValues) {
-            throw new Error(errorMessage(ERR_MSG_LIMIT_MAXVALUES, pos));
-          }
+
+          //
+          // run the limit check before parsing the literal
+          //
+          valueStack.checkValueLimit(pos);
 
           c = text.charCodeAt(lvpos);
-          sval = this.parseLiteral(text, pos, lvpos, c === CHAR_COLON);
+          lv = this.parseLiteral(text, pos, lvpos, c === CHAR_COLON);
           pos = lvpos;
 
           switch (c) {
@@ -641,28 +763,24 @@ export default class JsonURL {
               //
               // multi-element array
               //
-              if (++numValues > this.maxParseValues) {
-                throw new Error(errorMessage(ERR_MSG_LIMIT_MAXVALUES, pos));
-              }
-
-              stateStack[depth] = STATE_ARRAY_AFTER_ELEMENT;
-              valueStack.push([]);
-              valueStack.push(sval);
+              stateStack.replace(STATE_ARRAY_AFTER_ELEMENT);
+              valueStack.appendArrayValue(pos, []);
+              valueStack.push(lv);
               continue;
 
             case CHAR_PAREN_CLOSE:
               //
               // single element array
               //
-              valueStack.push([sval]);
+              valueStack.appendArrayValue(pos, [lv]);
 
-              if (--depth === -1) {
+              if (stateStack.depth(true) === -1) {
                 if (pos + 1 === end) {
                   return valueStack[0];
                 }
                 throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
               }
-              stateStack.pop();
+
               pos++;
               continue;
 
@@ -670,9 +788,8 @@ export default class JsonURL {
               //
               // key name for object
               //
-              stateStack[depth] = STATE_OBJECT_HAVE_KEY;
-              valueStack.push({});
-              valueStack.push(sval);
+              stateStack.replace(STATE_OBJECT_HAVE_KEY);
+              valueStack.push({}, lv);
               pos++;
               continue;
 
@@ -682,49 +799,67 @@ export default class JsonURL {
 
         case STATE_IN_ARRAY:
           if (c === CHAR_PAREN_OPEN) {
-            stateStack[depth] = STATE_ARRAY_AFTER_ELEMENT;
-            stateStack.push(STATE_PAREN);
-            if (++depth > this.maxParseDepth) {
-              throw new Error(errorMessage(ERR_MSG_LIMIT_MAXDEPTH, pos));
-            }
+            stateStack.replaceAndPush(
+              pos,
+              STATE_ARRAY_AFTER_ELEMENT,
+              STATE_PAREN
+            );
             pos++;
             continue;
           }
 
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_VALUE);
-          if (lvpos === end) {
-            throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, end));
-          }
-          if (++numValues > this.maxParseValues) {
-            throw new Error(errorMessage(ERR_MSG_LIMIT_MAXVALUES, pos));
-          }
 
-          sval = this.parseLiteral(text, pos, lvpos, false);
+          valueStack.checkValueLimit(pos);
+          lv = this.parseLiteral(text, pos, lvpos, false);
           pos = lvpos;
 
-          stateStack[depth] = STATE_ARRAY_AFTER_ELEMENT;
-          valueStack.push(sval);
+          if (lvpos === end) {
+            if (stateStack.depth() === 0 && options.impliedArray) {
+              return valueStack.popArrayValue(lv);
+            }
+            throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, end));
+          }
+
+          stateStack.replace(STATE_ARRAY_AFTER_ELEMENT);
+          valueStack.push(lv);
           continue;
 
         case STATE_ARRAY_AFTER_ELEMENT:
-          sval = valueStack.pop();
-          var dest = valueStack[valueStack.length - 1];
-          dest.push(sval);
+          valueStack.popArrayValue();
 
           switch (c) {
             case CHAR_COMMA:
-              stateStack[depth] = STATE_IN_ARRAY;
+              stateStack.replace(STATE_IN_ARRAY);
               pos++;
               continue;
 
             case CHAR_PAREN_CLOSE:
-              if (--depth === -1) {
-                if (pos + 1 == end) {
-                  return valueStack[0];
-                }
-                throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
+              switch (stateStack.depth(true)) {
+                case -1:
+                  //
+                  // end of a "real" composite
+                  //
+                  if (pos + 1 == end) {
+                    return valueStack[0];
+                  }
+                  throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
+
+                case 0:
+                  //
+                  // end of an implied composite
+                  //
+                  if (pos + 1 == end) {
+                    if (options.impliedArray) {
+                      return valueStack.popArrayValue();
+                    }
+                    if (options.impliedObject) {
+                      return valueStack.popObjectValue();
+                    }
+                  }
+                  break;
               }
-              stateStack.pop();
+
               pos++;
               continue;
           }
@@ -732,50 +867,66 @@ export default class JsonURL {
 
         case STATE_OBJECT_HAVE_KEY:
           if (c === CHAR_PAREN_OPEN) {
-            stateStack[depth] = STATE_OBJECT_AFTER_ELEMENT;
-            stateStack.push(STATE_PAREN);
-            if (++depth > this.maxParseDepth) {
-              throw new Error(errorMessage(ERR_MSG_LIMIT_MAXDEPTH, pos));
-            }
+            stateStack.replaceAndPush(
+              pos,
+              STATE_OBJECT_AFTER_ELEMENT,
+              STATE_PAREN
+            );
             pos++;
             continue;
           }
 
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_VALUE);
-          if (lvpos === end) {
-            throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, end));
-          }
-          if (++numValues > this.maxParseValues) {
-            throw new Error(errorMessage(ERR_MSG_LIMIT_MAXVALUES, pos));
-          }
 
-          sval = this.parseLiteral(text, pos, lvpos, false);
+          valueStack.checkValueLimit(pos);
+          lv = this.parseLiteral(text, pos, lvpos, false);
           pos = lvpos;
 
-          stateStack[depth] = STATE_OBJECT_AFTER_ELEMENT;
-          valueStack.push(sval);
+          if (lvpos === end) {
+            if (stateStack.depth() === 0 && options.impliedObject) {
+              return valueStack.popObjectValue(lv);
+            }
+            throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, end));
+          }
+
+          stateStack.replace(STATE_OBJECT_AFTER_ELEMENT);
+          valueStack.push(lv);
           continue;
 
         case STATE_OBJECT_AFTER_ELEMENT:
-          sval = valueStack.pop();
-          var skey = valueStack.pop();
-          var obj = valueStack[valueStack.length - 1];
-          obj[skey] = sval;
+          valueStack.popObjectValue();
 
           switch (c) {
             case CHAR_COMMA:
-              stateStack[depth] = STATE_IN_OBJECT;
+              stateStack.replace(STATE_IN_OBJECT);
               pos++;
               continue;
 
             case CHAR_PAREN_CLOSE:
-              if (--depth === -1) {
-                if (pos + 1 === end) {
-                  return valueStack[0];
-                }
-                throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
+              switch (stateStack.depth(true)) {
+                case -1:
+                  if (pos + 1 === end) {
+                    //
+                    // end of a "real" object
+                    //
+                    return valueStack[0];
+                  }
+                  throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
+                case 0:
+                  //
+                  // end of an implied composite
+                  //
+                  if (pos + 1 == end) {
+                    if (options.impliedArray) {
+                      return valueStack.popArrayValue();
+                    }
+                    if (options.impliedObject) {
+                      return valueStack.popObjectValue();
+                    }
+                  }
+                  break;
               }
-              stateStack.pop();
+
               pos++;
               continue;
           }
@@ -792,11 +943,11 @@ export default class JsonURL {
             throw new SyntaxError((ERR_MSG_EXPECT_OBJVALUE, lvpos));
           }
 
-          sval = this.parseLiteral(text, pos, lvpos, true);
+          lv = this.parseLiteral(text, pos, lvpos, true);
           pos = lvpos + 1;
 
-          stateStack[depth] = STATE_OBJECT_HAVE_KEY;
-          valueStack.push(sval);
+          stateStack.replace(STATE_OBJECT_HAVE_KEY);
+          valueStack.push(lv);
           continue;
 
         default:
@@ -821,3 +972,5 @@ export default class JsonURL {
     return value.toJsonURLText();
   }
 }
+
+export { JsonURL as default, JsonURL };
