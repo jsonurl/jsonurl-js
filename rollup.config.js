@@ -38,7 +38,7 @@ const banner =
 
 export default [
   {
-    input: "src/main.js",
+    input: "src/JsonURL.js",
     output: [
       {
         name: pkg.moduleName,
@@ -49,7 +49,7 @@ export default [
     plugins: [resolve(), commonjs(), babel()],
   },
   {
-    input: "src/main.js",
+    input: "src/JsonURL.js",
     output: [
       {
         name: pkg.moduleName,
@@ -61,7 +61,7 @@ export default [
     plugins: [resolve(), commonjs(), babel(), terser()],
   },
   {
-    input: "src/main.js",
+    input: "src/JsonURL.js",
     output: [
       {
         name: pkg.moduleName,
