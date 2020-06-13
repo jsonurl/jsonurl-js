@@ -19,4 +19,4 @@ apidoc/
 # Misc
 backup/
 *.swp
-
+src/debug.*
