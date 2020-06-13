@@ -38,5 +38,11 @@ module.exports = {
         jest: true,
       },
     },
+    {
+      files: ["debug.mjs", "debug.js"],
+      env: {
+        node: true,
+      },
+    },
   ],
 };
