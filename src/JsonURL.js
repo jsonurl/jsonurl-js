@@ -973,4 +973,4 @@ class JsonURL {
   }
 }
 
-export { JsonURL as default, JsonURL };
+export { JsonURL as default };
