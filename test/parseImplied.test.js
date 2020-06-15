@@ -22,32 +22,29 @@
   SOFTWARE.
 */
 
-import JsonURL from "./JsonURL.js";
+import JsonURL from "../src/JsonURL.js";
 
-//
-// Test Errors
-//
-const u = new JsonURL({
-  maxParseChars: 10,
-  maxParseValues: 5,
-  maxParseDepth: 3,
-});
+const u = new JsonURL();
 
-test.each(["(", ")", "{", "}", ",", ":", "(1", "(1,", "(a:", "{a:}"])(
-  "JsonURL.parse(%p)",
-  (text) => {
-    expect(() => {
-      u.parse(text);
-    }).toThrow(SyntaxError);
-  }
-);
-
-test.each(["((((1))))", "(1,2,3,4,5)"])("JsonURL.parse(%p)", (text) => {
-  expect(() => {
-    u.parse(text);
-  }).toThrow(Error);
-
-  expect(() => {
-    u.parse(text);
-  }).toThrow(/ exceeded(\s+at\s+position\s+\d+)?$/);
+test.each([
+  ["1,2,3", { impliedArray: [] }, [1, 2, 3]],
+  ["1,2,(3,4)", { impliedArray: [] }, [1, 2, [3, 4]]],
+  ["1,2,(a:b)", { impliedArray: [] }, [1, 2, { a: "b" }]],
+  ["1,2,(3,(4))", { impliedArray: [] }, [1, 2, [3, [4]]]],
+  ["(1,(2)),3,4", { impliedArray: [] }, [[1, [2]], 3, 4]],
+  ["a:b,c:d", { impliedObject: {} }, { a: "b", c: "d" }],
+  ["a:(b:c)", { impliedObject: {} }, { a: { b: "c" } }],
+  ["a:(1,2)", { impliedObject: {} }, { a: [1, 2] }],
+  [
+    "a:b,c:d,e:(f:g))",
+    { impliedObject: {} },
+    { a: "b", c: "d", e: { f: "g" } },
+  ],
+  [
+    "a:(b:(c:(d))),e:f",
+    { impliedObject: {} },
+    { a: { b: { c: ["d"] } }, e: "f" },
+  ],
+])("JsonURL.parse(%p, %p)", (text, options, expected) => {
+  expect(u.parse(text, options)).toEqual(expected);
 });

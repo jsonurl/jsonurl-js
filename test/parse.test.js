@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-import JsonURL from "./JsonURL.js";
+import JsonURL from "../src/JsonURL.js";
 
 //
 // JsonURL.parse tests

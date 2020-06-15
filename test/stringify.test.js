@@ -22,19 +22,39 @@
   SOFTWARE.
 */
 
-"use strict";
+import JsonURL from "../src/JsonURL.js";
 
-module.exports = {
-  extends: ["../.eslintrc.js"],
-  parserOptions: {
-    sourceType: "module",
-  },
-  overrides: [
-    {
-      files: ["debug.mjs", "debug.js"],
-      env: {
-        node: true,
-      },
-    },
-  ],
-};
+//
+// JsonURL.stringify tests
+//
+
+test("JsonURL.stringify(undefined)", () => {
+  expect(JsonURL.stringify(undefined)).toBeUndefined();
+});
+
+test.each([
+  [true, "true"],
+  [false, "false"],
+  [null, "null"],
+  ["true", "'true'"],
+  ["false", "'false'"],
+  ["null", "'null'"],
+  ["()", "'()'"],
+  ["{}", "%7B%7D"],
+  [0, "0"],
+  [1.1, "1.1"],
+  ["a", "a"],
+  ["1", "'1'"],
+  ["2.3", "'2.3'"],
+  ["2e1", "'2e1'"],
+  ["-4", "'-4'"],
+  ["5a", "5a"],
+  ["'1+2'", "%271%2B2'"],
+  ["1e+1", "1e%2B1"],
+  ["a b c", "a+b+c"],
+  ["a,b", "'a,b'"],
+  ["a,b c", "'a,b+c'"],
+  ["Bob & Frank", "Bob+%26+Frank"],
+])("JsonURL.stringify(%p)", (value, expected) => {
+  expect(JsonURL.stringify(value)).toBe(expected);
+});

@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-commented-out-tests */
 /*
   MIT License
 
@@ -23,29 +22,21 @@
   SOFTWARE.
 */
 
-import JsonURL from "./JsonURL.js";
+"use strict";
 
-const u = new JsonURL();
-
-test.each([
-  ["1,2,3", { impliedArray: [] }, [1, 2, 3]],
-  ["1,2,(3,4)", { impliedArray: [] }, [1, 2, [3, 4]]],
-  ["1,2,(a:b)", { impliedArray: [] }, [1, 2, { a: "b" }]],
-  ["1,2,(3,(4))", { impliedArray: [] }, [1, 2, [3, [4]]]],
-  ["(1,(2)),3,4", { impliedArray: [] }, [[1, [2]], 3, 4]],
-  ["a:b,c:d", { impliedObject: {} }, { a: "b", c: "d" }],
-  ["a:(b:c)", { impliedObject: {} }, { a: { b: "c" } }],
-  ["a:(1,2)", { impliedObject: {} }, { a: [1, 2] }],
-  [
-    "a:b,c:d,e:(f:g))",
-    { impliedObject: {} },
-    { a: "b", c: "d", e: { f: "g" } },
+module.exports = {
+  extends: ["../.eslintrc.js"],
+  parserOptions: {
+    sourceType: "module",
+  },
+  overrides: [
+    {
+      files: ["*.test.js"],
+      extends: ["plugin:jest/recommended"],
+      env: {
+        node: true,
+        jest: true,
+      },
+    },
   ],
-  [
-    "a:(b:(c:(d))),e:f",
-    { impliedObject: {} },
-    { a: { b: { c: ["d"] } }, e: "f" },
-  ],
-])("JsonURL.parse(%p, %p)", (text, options, expected) => {
-  expect(u.parse(text, options)).toEqual(expected);
-});
+};
