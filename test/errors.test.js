@@ -22,39 +22,32 @@
   SOFTWARE.
 */
 
-import JsonURL from "./JsonURL.js";
+import JsonURL from "../src/JsonURL.js";
 
 //
-// JsonURL.stringify tests
+// Test Errors
 //
-
-test("JsonURL.stringify(undefined)", () => {
-  expect(JsonURL.stringify(undefined)).toBeUndefined();
+const u = new JsonURL({
+  maxParseChars: 10,
+  maxParseValues: 5,
+  maxParseDepth: 3,
 });
 
-test.each([
-  [true, "true"],
-  [false, "false"],
-  [null, "null"],
-  ["true", "'true'"],
-  ["false", "'false'"],
-  ["null", "'null'"],
-  ["()", "'()'"],
-  ["{}", "%7B%7D"],
-  [0, "0"],
-  [1.1, "1.1"],
-  ["a", "a"],
-  ["1", "'1'"],
-  ["2.3", "'2.3'"],
-  ["2e1", "'2e1'"],
-  ["-4", "'-4'"],
-  ["5a", "5a"],
-  ["'1+2'", "%271%2B2'"],
-  ["1e+1", "1e%2B1"],
-  ["a b c", "a+b+c"],
-  ["a,b", "'a,b'"],
-  ["a,b c", "'a,b+c'"],
-  ["Bob & Frank", "Bob+%26+Frank"],
-])("JsonURL.stringify(%p)", (value, expected) => {
-  expect(JsonURL.stringify(value)).toBe(expected);
+test.each(["(", ")", "{", "}", ",", ":", "(1", "(1,", "(a:", "{a:}"])(
+  "JsonURL.parse(%p)",
+  (text) => {
+    expect(() => {
+      u.parse(text);
+    }).toThrow(SyntaxError);
+  }
+);
+
+test.each(["((((1))))", "(1,2,3,4,5)"])("JsonURL.parse(%p)", (text) => {
+  expect(() => {
+    u.parse(text);
+  }).toThrow(Error);
+
+  expect(() => {
+    u.parse(text);
+  }).toThrow(/ exceeded(\s+at\s+position\s+\d+)?$/);
 });
