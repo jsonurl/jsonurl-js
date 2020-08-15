@@ -24,7 +24,7 @@
 
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
-import babel from "rollup-plugin-babel";
+import babel from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
 import { eslint } from "rollup-plugin-eslint";
 import pkg from "./package.json";
@@ -36,6 +36,25 @@ const banner =
   " * Released under the MIT License.\n" +
   " */";
 
+//
+// https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers
+//
+const babelBundle = {
+  babelHelpers: "bundled",
+};
+
+const babelCJS = {
+  babelHelpers: "runtime",
+  plugins: ["@babel/plugin-transform-runtime"],
+};
+
+const babelESM = {
+  babelHelpers: "runtime",
+  plugins: [["@babel/plugin-transform-runtime", { useESModules: false }]],
+};
+
+const babelExternal = [/@babel\/runtime/];
+
 export default [
   {
     input: "src/JsonURL.js",
@@ -46,7 +65,7 @@ export default [
         format: "umd",
       },
     ],
-    plugins: [resolve(), commonjs(), babel()],
+    plugins: [resolve(), commonjs(), babel(babelBundle)],
   },
   {
     input: "src/JsonURL.js",
@@ -58,7 +77,19 @@ export default [
         banner: banner,
       },
     ],
-    plugins: [resolve(), commonjs(), babel(), terser()],
+    plugins: [resolve(), commonjs(), babel(babelBundle), terser()],
+  },
+  {
+    input: "src/JsonURL.js",
+    output: [
+      {
+        name: pkg.moduleName,
+        file: pkg.module,
+        format: "esm",
+      },
+    ],
+    plugins: [eslint(), babel(babelESM)],
+    external: babelExternal,
   },
   {
     input: "src/JsonURL.js",
@@ -68,12 +99,8 @@ export default [
         file: pkg.main,
         format: "cjs",
       },
-      {
-        name: pkg.moduleName,
-        file: pkg.module,
-        format: "esm",
-      },
     ],
-    plugins: [eslint(), babel()],
+    plugins: [eslint(), babel(babelCJS)],
+    external: babelExternal,
   },
 ];
