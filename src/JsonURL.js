@@ -386,6 +386,7 @@ Object.defineProperty(String.prototype, "toJsonURLText", {
 
 /**
  * A class for managing values during parse
+ * @private
  */
 class StateStack extends Array {
   constructor(parser) {
@@ -431,6 +432,7 @@ class StateStack extends Array {
 
 /**
  * A class for managing values during parse
+ * @private
  */
 class ValueStack extends Array {
   constructor(parser) {
@@ -493,6 +495,7 @@ class ValueStack extends Array {
 
 /**
  * A class for parsing JSON->URL text.
+ * @public
  */
 class JsonURL {
   /**

@@ -26,7 +26,7 @@
 
 module.exports = {
   source: {
-    include: ["README.md", "src"],
+    include: ["README.md", "package.json", "src"],
     includePattern: ".+\\.(js|md)$",
     excludePattern: ".test.js$",
   },
