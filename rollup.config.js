@@ -45,12 +45,12 @@ const babelBundle = {
 
 const babelCJS = {
   babelHelpers: "runtime",
-  plugins: ['@babel/plugin-transform-runtime'],
+  plugins: ["@babel/plugin-transform-runtime"],
 };
 
 const babelESM = {
   babelHelpers: "runtime",
-  plugins: [['@babel/plugin-transform-runtime', { useESModules: false }]],
+  plugins: [["@babel/plugin-transform-runtime", { useESModules: false }]],
 };
 
 const babelExternal = [/@babel\/runtime/];
@@ -65,7 +65,7 @@ export default [
         format: "umd",
       },
     ],
-    plugins: [resolve(), commonjs(), babel( babelBundle )],
+    plugins: [resolve(), commonjs(), babel(babelBundle)],
   },
   {
     input: "src/JsonURL.js",
@@ -77,7 +77,7 @@ export default [
         banner: banner,
       },
     ],
-    plugins: [resolve(), commonjs(), babel( babelBundle ), terser()],
+    plugins: [resolve(), commonjs(), babel(babelBundle), terser()],
   },
   {
     input: "src/JsonURL.js",
@@ -88,7 +88,7 @@ export default [
         format: "esm",
       },
     ],
-    plugins: [eslint(), babel( babelESM )],
+    plugins: [eslint(), babel(babelESM)],
     external: babelExternal,
   },
   {
@@ -100,8 +100,7 @@ export default [
         format: "cjs",
       },
     ],
-    plugins: [eslint(), babel( babelCJS )],
+    plugins: [eslint(), babel(babelCJS)],
     external: babelExternal,
   },
-
 ];
