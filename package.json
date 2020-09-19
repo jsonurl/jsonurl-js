@@ -52,7 +52,7 @@
     "prettier": "^2.1.0",
     "rollup": "^2.26.6",
     "rollup-plugin-eslint": "^7.0.0",
-    "rollup-plugin-terser": "^7.0.0"
+    "rollup-plugin-terser": "^7.0.1"
   },
   "browserslist": "defaults",
   "files": [
