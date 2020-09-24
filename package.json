@@ -47,10 +47,10 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-jest": "^23.20.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "jest": "^26.4.1",
+    "jest": "^26.4.2",
     "jsdoc": "^3.6.5",
     "prettier": "^2.1.0",
-    "rollup": "^2.26.4",
+    "rollup": "^2.26.5",
     "rollup-plugin-eslint": "^7.0.0",
     "rollup-plugin-terser": "^7.0.0"
   },
