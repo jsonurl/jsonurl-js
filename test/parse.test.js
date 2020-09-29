@@ -24,14 +24,6 @@
 
 import JsonURL from "../src/JsonURL.js";
 
-//
-// JsonURL.parse tests
-//
-
-test("JsonURL.parse(<EMPTY STRING>)", () => {
-  expect(u.parse("")).toBeUndefined();
-});
-
 const u = new JsonURL();
 
 test.each([
@@ -61,6 +53,10 @@ test.each([
   ["(null,null)", [null, null]],
   ["(a:b,c:d,e:f)", { a: "b", c: "d", e: "f" }],
   ["1e%2B1", "1e+1"],
+  ["'Hello,+(World)!'", "Hello, (World)!"],
+  ["('Hello,+(World)!')", ["Hello, (World)!"]],
+  ["('','')", ["", ""]],
+  ["('qkey':g)", { qkey: "g" }],
 ])("JsonURL.parse(%s)", (text, expected) => {
   expect(u.parse(text)).toEqual(expected);
 
@@ -74,5 +70,14 @@ test.each([
       .replace("2.0", "2")
       .replace("4e-2", "0.04")
       .replace("5e+0", "5")
+      .replace("'qkey'", "qkey")
   );
+});
+
+test.each([""])("JsonURL.parse(%p)", (text) => {
+  expect(u.parse(text)).toBeUndefined();
+});
+
+test.each(["null"])("JsonURL.parse(%p)", (text) => {
+  expect(u.parse(text)).toBeNull();
 });

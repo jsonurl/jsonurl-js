@@ -27,6 +27,10 @@ import JsonURL from "../src/JsonURL.js";
 const u = new JsonURL();
 
 test.each([
+  ["()", { impliedArray: [], impliedOnly: false }, [{}]],
+  ["(1)", { impliedArray: [], impliedOnly: false }, [[1]]],
+  ["a:()", { impliedObject: {} }, { a: {} }],
+  ["a:(1)", { impliedObject: {} }, { a: [1] }],
   ["1,2,3", { impliedArray: [] }, [1, 2, 3]],
   ["1,2,(3,4)", { impliedArray: [] }, [1, 2, [3, 4]]],
   ["1,2,(a:b)", { impliedArray: [] }, [1, 2, { a: "b" }]],
@@ -35,16 +39,17 @@ test.each([
   ["a:b,c:d", { impliedObject: {} }, { a: "b", c: "d" }],
   ["a:(b:c)", { impliedObject: {} }, { a: { b: "c" } }],
   ["a:(1,2)", { impliedObject: {} }, { a: [1, 2] }],
-  [
-    "a:b,c:d,e:(f:g))",
-    { impliedObject: {} },
-    { a: "b", c: "d", e: { f: "g" } },
-  ],
+  ["a:b,c:d,e:(f:g)", { impliedObject: {} }, { a: "b", c: "d", e: { f: "g" } }],
   [
     "a:(b:(c:(d))),e:f",
     { impliedObject: {} },
     { a: { b: { c: ["d"] } }, e: "f" },
   ],
 ])("JsonURL.parse(%p, %p)", (text, options, expected) => {
+  if (options.impliedOnly !== false) {
+    expect(() => {
+      u.parse(text);
+    }).toThrow(SyntaxError);
+  }
   expect(u.parse(text, options)).toEqual(expected);
 });
