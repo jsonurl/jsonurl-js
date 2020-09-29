@@ -55,6 +55,8 @@ const CHAR_QUESTION = 0x3f;
 const CHAR_AT = 0x40;
 const CHAR_UNDERSCORE = 0x5f;
 const CHAR_TILDE = 0x7e;
+const CHAR_EQUALS = 0x3d;
+const CHAR_AMP = 0x26;
 
 const CHAR_0 = 0x30;
 const CHAR_E = 0x45;
@@ -77,6 +79,7 @@ const STATE_IN_OBJECT = 6;
 
 const ERR_MSG_EXPECT_STRUCTCHAR =
   "JSON->URL: expected comma, open paren, or close paren";
+const ERR_MSG_EXPECT_MOREARRAY = "JSON->URL: expected comma or close paren";
 const ERR_MSG_EXPECT_VALUE = "JSON->URL: expected value";
 const ERR_MSG_EXPECT_LITERAL = "JSON->URL: expected literal value";
 const ERR_MSG_EXPECT_OBJVALUE = "JSON->URL: expected object value";
@@ -187,18 +190,18 @@ function errorMessage(msg, pos) {
   return msg + " at position " + pos;
 }
 
-function parseLiteralLength(text, i, len, errmsg) {
+function parseLiteralLength(text, i, end, errmsg) {
   var isQuote = false;
   var start = i;
 
-  if (i === len) {
+  if (i === end) {
     throw new SyntaxError(errorMessage(errmsg, i));
   }
   if (text.charCodeAt(i) === CHAR_QUOTE) {
     isQuote = true;
     i++;
   }
-  for (; i < len; i++) {
+  for (; i < end; i++) {
     var c = text.charCodeAt(i);
     if (c >= 0x41 && c <= 0x5a) {
       // A-Z
@@ -243,12 +246,21 @@ function parseLiteralLength(text, i, len, errmsg) {
           return i;
         }
         continue;
+      case CHAR_AMP:
+      case CHAR_EQUALS:
+        //
+        // these are forbidden, quoted or otherwise.
+        //
+        if (i === start) {
+          throw new SyntaxError(errorMessage(errmsg, start));
+        }
+        return i;
       default:
         throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, i));
     }
   }
 
-  return len;
+  return end;
 }
 
 function toJsonURLText_Boolean() {
@@ -500,6 +512,13 @@ class ValueStack extends Array {
 class JsonURL {
   /**
    * Construct a new JsonURL class.
+   *
+   * Each instance of this class contains a number of properties that manage
+   * the behavior of the parser and the values it returns; these are documented
+   * below. The class instance does not manage parse state -- that state is
+   * local to the parse() function itself. As long as you don't need different
+   * properties (e.g. limits, null value, etc) you may re-use the same Parser
+   * instance, even by multiple Workers.
    * @param {Object} prop Initialization properties.
    * You may provide zero more more of the following. Reasonable defaults
    * are assumed.
@@ -643,6 +662,27 @@ class JsonURL {
   /**
    * Parse JSON->URL text.
    * @param {string} text The text to parse.
+   * @param {Object} options parse options.
+   * You may provide zero more more of the following.
+   * @param {array} options.impliedArray An implied array.
+   * The parse() method implements a parser for the grammar oulined in
+   * section 2.7 of the JSON->URL specification. The given parse text
+   * is assumed to be an array, and the leading and trailing parens must
+   * not be present. The given prop.impliedArray value will be populated
+   * and returned.
+   * @param {object} options.impliedObject An implied object.
+   * The parse() method implements a parser for the grammar oulined in
+   * section 2.8 of the JSON->URL specification. The given parse text
+   * is assumed to be an object, and the leading and trailing parens must
+   * not be present. The given prop.impliedObject value will be populated
+   * and returned.
+   * @param {boolean} options.wwwFormUrlEncoded Enable support for
+   * x-www-form-urlencoded content.
+   * The parse() method implements a parser for the grammar oulined in
+   * section 2.9 of the JSON->URL specification. The given parse text
+   * is may use ampersand and equal characters as the value and member
+   * separator characters, respetively, at the top-level. This may be
+   * combined with prop.impliedArray or prop.impliedObject.
    * @throws SyntaxError if there is a syntax error in the given text
    * @throws Error if a limit given in the constructor (or its default)
    * is exceeded.
@@ -664,10 +704,10 @@ class JsonURL {
     let stateStack = new StateStack(this);
     let pos = 0;
 
-    if (options.impliedObject) {
+    if (options.impliedObject !== undefined) {
       valueStack.push(options.impliedObject);
       stateStack.push(STATE_IN_OBJECT);
-    } else if (options.impliedArray) {
+    } else if (options.impliedArray !== undefined) {
       valueStack.push(options.impliedArray);
       stateStack.push(STATE_IN_ARRAY);
     } else if (text.charCodeAt(0) !== CHAR_PAREN_OPEN) {
@@ -725,18 +765,26 @@ class JsonURL {
               continue;
 
             case CHAR_PAREN_CLOSE:
+              pos++;
+
               if (stateStack.depth(true) === -1) {
-                if (pos + 1 != end) {
-                  throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
-                }
-                if (valueStack.length === 0) {
+                if (pos === end) {
                   return newEmptyValue(this);
                 }
-                return valueStack[0];
+                throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
               }
 
               valueStack.appendArrayValue(pos, newEmptyValue(this));
-              pos++;
+
+              if (pos === end && stateStack.depth() === 0) {
+                if (options.impliedArray) {
+                  return valueStack.popArrayValue();
+                }
+                if (options.impliedObject) {
+                  return valueStack.popObjectValue();
+                }
+                throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, pos));
+              }
               continue;
 
             default:
@@ -762,6 +810,12 @@ class JsonURL {
           pos = lvpos;
 
           switch (c) {
+            case CHAR_AMP:
+              if (!options.wwwFormUrlEncoded || stateStack.depth() > 0) {
+                throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, pos));
+              }
+            // fall through
+
             case CHAR_COMMA:
               //
               // multi-element array
@@ -772,20 +826,43 @@ class JsonURL {
               continue;
 
             case CHAR_PAREN_CLOSE:
+              pos++;
+
               //
               // single element array
               //
               valueStack.appendArrayValue(pos, [lv]);
 
-              if (stateStack.depth(true) === -1) {
-                if (pos + 1 === end) {
-                  return valueStack[0];
-                }
-                throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
+              switch (stateStack.depth(true)) {
+                case -1:
+                  if (pos === end) {
+                    return valueStack[0];
+                  }
+                  throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
+
+                case 0:
+                  if (pos === end) {
+                    if (options.impliedArray) {
+                      return valueStack.popArrayValue();
+                    }
+                    if (options.impliedObject) {
+                      return valueStack.popObjectValue();
+                    }
+                    throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, pos));
+                  }
+                  break;
+
+                default:
+                  break;
               }
 
-              pos++;
               continue;
+
+            case CHAR_EQUALS:
+              if (!options.wwwFormUrlEncoded || stateStack.depth() > 0) {
+                throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, pos));
+              }
+            // fall through
 
             case CHAR_COLON:
               //
@@ -817,7 +894,7 @@ class JsonURL {
           lv = this.parseLiteral(text, pos, lvpos, false);
           pos = lvpos;
 
-          if (lvpos === end) {
+          if (pos === end) {
             if (stateStack.depth() === 0 && options.impliedArray) {
               return valueStack.popArrayValue(lv);
             }
@@ -832,18 +909,26 @@ class JsonURL {
           valueStack.popArrayValue();
 
           switch (c) {
+            case CHAR_AMP:
+              if (!options.wwwFormUrlEncoded || stateStack.depth() > 0) {
+                throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, pos));
+              }
+            // fall through
+
             case CHAR_COMMA:
               stateStack.replace(STATE_IN_ARRAY);
               pos++;
               continue;
 
             case CHAR_PAREN_CLOSE:
+              pos++;
+
               switch (stateStack.depth(true)) {
                 case -1:
                   //
                   // end of a "real" composite
                   //
-                  if (pos + 1 == end) {
+                  if (pos === end && !options.impliedArray) {
                     return valueStack[0];
                   }
                   throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
@@ -852,21 +937,21 @@ class JsonURL {
                   //
                   // end of an implied composite
                   //
-                  if (pos + 1 == end) {
+                  if (pos === end) {
                     if (options.impliedArray) {
                       return valueStack.popArrayValue();
                     }
                     if (options.impliedObject) {
                       return valueStack.popObjectValue();
                     }
+                    throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, pos));
                   }
                   break;
               }
 
-              pos++;
               continue;
           }
-          throw new SyntaxError(errorMessage(ERR_MSG_EXPECT_STRUCTCHAR, pos));
+          throw new SyntaxError(errorMessage(ERR_MSG_EXPECT_MOREARRAY, pos));
 
         case STATE_OBJECT_HAVE_KEY:
           if (c === CHAR_PAREN_OPEN) {
@@ -900,37 +985,51 @@ class JsonURL {
           valueStack.popObjectValue();
 
           switch (c) {
+            case CHAR_AMP:
+              if (!options.wwwFormUrlEncoded || stateStack.depth() > 0) {
+                throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, pos));
+              }
+            // fall through
+
             case CHAR_COMMA:
               stateStack.replace(STATE_IN_OBJECT);
               pos++;
               continue;
 
             case CHAR_PAREN_CLOSE:
+              pos++;
+
               switch (stateStack.depth(true)) {
                 case -1:
-                  if (pos + 1 === end) {
+                  if (pos === end && !options.impliedObject) {
                     //
                     // end of a "real" object
                     //
                     return valueStack[0];
                   }
                   throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
+
                 case 0:
                   //
                   // end of an implied composite
                   //
-                  if (pos + 1 == end) {
+                  if (pos === end) {
                     if (options.impliedArray) {
                       return valueStack.popArrayValue();
                     }
                     if (options.impliedObject) {
                       return valueStack.popObjectValue();
                     }
+                    throw new SyntaxError(
+                      errorMessage(ERR_MSG_EXTRACHARS, pos)
+                    );
                   }
+                  break;
+
+                default:
                   break;
               }
 
-              pos++;
               continue;
           }
           throw new SyntaxError(errorMessage(ERR_MSG_EXPECT_STRUCTCHAR, pos));
@@ -938,12 +1037,27 @@ class JsonURL {
         case STATE_IN_OBJECT:
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_LITERAL);
           if (lvpos === end) {
+            //
+            // I don't know that this is actually possible -- I haven't
+            // found a test case yet. But, if it is possible, it's an error.
+            //
             throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, end));
           }
 
           c = text.charCodeAt(lvpos);
-          if (c !== CHAR_COLON) {
-            throw new SyntaxError((ERR_MSG_EXPECT_OBJVALUE, lvpos));
+
+          switch (c) {
+            case CHAR_EQUALS:
+              if (!options.wwwFormUrlEncoded || stateStack.depth() > 0) {
+                throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, pos));
+              }
+            // fall through
+
+            case CHAR_COLON:
+              break;
+
+            default:
+              throw new SyntaxError((ERR_MSG_EXPECT_OBJVALUE, lvpos));
           }
 
           lv = this.parseLiteral(text, pos, lvpos, true);
@@ -954,6 +1068,9 @@ class JsonURL {
           continue;
 
         default:
+          //
+          // this shouldn't be possible, but handle it just in case
+          //
           throw new SyntaxError(errorMessage(ERR_MSG_INTERNAL, pos));
       }
     }

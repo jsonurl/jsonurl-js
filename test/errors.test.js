@@ -24,30 +24,78 @@
 
 import JsonURL from "../src/JsonURL.js";
 
-//
-// Test Errors
-//
-const u = new JsonURL({
-  maxParseChars: 10,
-  maxParseValues: 5,
-  maxParseDepth: 3,
+test.each([
+  "(",
+  ")",
+  "{",
+  "}",
+  ",",
+  ":",
+  "(1",
+  "(1,",
+  "(a:",
+  "(a:b",
+  "1,",
+  "()a",
+  "(1)a",
+  "(|",
+  "((1)",
+  "(1(",
+  "((1,2,)",
+  "(1,1",
+  "(1,a,()",
+  "(((1,1(",
+  "(((1))",
+  "((a:b)",
+  "(a:b,'')",
+  "((a:b(",
+  "(a:b,c)",
+  "(a:b,c:)",
+  "(a:b,c:,)",
+  "(a&b)",
+  "(a=b)",
+  "'a=b'",
+  "'a&b'",
+])("JsonURL.parse(%p)", (text) => {
+  const u = new JsonURL();
+
+  expect(() => {
+    u.parse(text);
+  }).toThrow(SyntaxError);
 });
 
-test.each(["(", ")", "{", "}", ",", ":", "(1", "(1,", "(a:", "{a:}"])(
+test.each([
+  ["1,2)", { impliedArray: [] }],
+  ["a:b)", { impliedObject: {} }],
+  ["((a:b)", { impliedObject: {} }],
+  ["(&b)", { wwwFormUrlEncoded: true }],
+  ["'a&b'", { wwwFormUrlEncoded: true }],
+])("JsonURL.parse(%p, %p)", (text, options) => {
+  const u = new JsonURL();
+
+  expect(() => {
+    u.parse(text, options);
+  }).toThrow(SyntaxError);
+});
+
+test.each(["((((1))))", "(1,2,3,4,5,6)", "(100000,100000,100000)"])(
   "JsonURL.parse(%p)",
   (text) => {
+    //
+    // Test Errors
+    //
+    const u = new JsonURL({
+      maxParseChars: 15,
+      maxParseValues: 5,
+      maxParseDepth: 2,
+    });
+
     expect(() => {
       u.parse(text);
-    }).toThrow(SyntaxError);
+    }).toThrow(Error);
+
+    expect(() => {
+      u.parse(text);
+    }).toThrow(/ exceeded(\s+at\s+position\s+\d+)?$/);
   }
 );
-
-test.each(["((((1))))", "(1,2,3,4,5)"])("JsonURL.parse(%p)", (text) => {
-  expect(() => {
-    u.parse(text);
-  }).toThrow(Error);
-
-  expect(() => {
-    u.parse(text);
-  }).toThrow(/ exceeded(\s+at\s+position\s+\d+)?$/);
-});
