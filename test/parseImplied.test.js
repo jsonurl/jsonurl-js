@@ -27,8 +27,10 @@ import JsonURL from "../src/JsonURL.js";
 const u = new JsonURL();
 
 test.each([
+  ["", { impliedArray: [], impliedOnly: false }, []],
   ["()", { impliedArray: [], impliedOnly: false }, [{}]],
   ["(1)", { impliedArray: [], impliedOnly: false }, [[1]]],
+  ["", { impliedObject: {} }, {}],
   ["a:()", { impliedObject: {} }, { a: {} }],
   ["a:(1)", { impliedObject: {} }, { a: [1] }],
   ["1,2,3", { impliedArray: [] }, [1, 2, 3]],

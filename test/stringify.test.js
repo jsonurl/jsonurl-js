@@ -58,3 +58,50 @@ test.each([
 ])("JsonURL.stringify(%p)", (value, expected) => {
   expect(JsonURL.stringify(value)).toBe(expected);
 });
+
+test.each([
+  [[undefined], {}, "null"],
+  [[undefined], { ignoreUndefinedArrayMembers: true }, ""],
+  [[null], { ignoreNullArrayMembers: true }, ""],
+  [[1, 2, 3, [4, 5]], { wwwFormUrlEncoded: true }, "1&2&3&(4,5)"],
+  [{ a: undefined }, { ignoreUndefinedObjectMembers: true }, ""],
+  [{ a: undefined, b: 1 }, { ignoreUndefinedObjectMembers: true }, "b:1"],
+  [{ a: null, b: 1 }, { ignoreNullObjectMembers: true }, "b:1"],
+  [
+    { a: undefined, b: 1 },
+    { ignoreUndefinedObjectMembers: false },
+    "a:null,b:1",
+  ],
+  [
+    { a: 1, b: 2, c: { d: 4, e: 5 } },
+    { wwwFormUrlEncoded: true },
+    "a=1&b=2&c=(d:4,e:5)",
+  ],
+])("JsonURL.stringify(%p, %p)", (value, options, expected) => {
+  expect(JsonURL.stringify(value, options)).toBe("(" + expected + ")");
+
+  options.isImplied = true;
+  expect(JsonURL.stringify(value, options)).toBe(expected);
+});
+
+const nestedHelloWorldFunc = function () {
+  return function () {
+    return "Hello, World!";
+  };
+};
+
+test("JsonURL.stringify(array with function)", () => {
+  expect(JsonURL.stringify([nestedHelloWorldFunc])).toBe("()");
+
+  expect(
+    JsonURL.stringify([nestedHelloWorldFunc], { callFunctions: true })
+  ).toBe("('Hello,+World!')");
+});
+
+test("JsonURL.stringify(object with function)", () => {
+  expect(JsonURL.stringify({ fun: nestedHelloWorldFunc })).toBe("()");
+
+  expect(
+    JsonURL.stringify({ fun: nestedHelloWorldFunc }, { callFunctions: true })
+  ).toBe("(fun:'Hello,+World!')");
+});
