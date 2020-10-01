@@ -54,6 +54,7 @@ test.each([
   ["(a:b,c:d,e:f)", { a: "b", c: "d", e: "f" }],
   ["1e%2B1", "1e+1"],
   ["'Hello,+(World)!'", "Hello, (World)!"],
+  ["Bob's+house", "Bob's house"],
   ["('Hello,+(World)!')", ["Hello, (World)!"]],
   ["('','')", ["", ""]],
   ["('qkey':g)", { qkey: "g" }],
@@ -74,10 +75,51 @@ test.each([
   );
 });
 
-test.each([""])("JsonURL.parse(%p)", (text) => {
+test.each([undefined])("JsonURL.parse(%p)", (text) => {
   expect(u.parse(text)).toBeUndefined();
 });
 
-test.each(["null"])("JsonURL.parse(%p)", (text) => {
+test.each(["null", null])("JsonURL.parse(%p)", (text) => {
   expect(u.parse(text)).toBeNull();
+});
+
+test("JsonURL.parse('()') with prop.emptyValue function", () => {
+  //
+  // test that prop.emptyValue can be a function
+  //
+  const f = function () {
+    return { empty: true };
+  };
+
+  const jup = new JsonURL({ emptyValue: f });
+
+  expect(jup.parse("()")).toEqual({ empty: true });
+});
+
+test("JsonURL.parse(null) with prop.nullValue function", () => {
+  //
+  // test that prop.nullValue can be a function
+  //
+  const f = function () {
+    return { null: true };
+  };
+
+  const jup = new JsonURL({ nullValue: f });
+
+  expect(jup.parse("null")).toEqual({ null: true });
+});
+
+test("JsonURL.parse(null) with new Parser prop from function", () => {
+  const NullValue = "NullValue";
+
+  const jup = new JsonURL(() => {
+    return {
+      nullValue: NullValue,
+    };
+  });
+
+  //
+  // test that prop can be a function
+  //
+  expect(jup.parse("null")).toBe(NullValue);
 });

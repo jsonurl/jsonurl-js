@@ -177,9 +177,16 @@ function parseIntegerLength(text, i, len) {
 
 function newEmptyValue(p) {
   if (typeof p.emptyValue === "function") {
-    return new p.emptyValue();
+    return p.emptyValue();
   }
   return p.emptyValue;
+}
+
+function newNullValue(p) {
+  if (typeof p.nullValue === "function") {
+    return p.nullValue();
+  }
+  return p.nullValue;
 }
 
 function errorMessage(msg, pos) {
@@ -269,7 +276,7 @@ function toJsonURLText_Boolean() {
 function toJsonURLText_Number() {
   return String(this);
 }
-function toJsonURLText_String(isKey) {
+function toJsonURLText_String(options, depth, isKey) {
   if (this.length === 0) {
     return "''";
   }
@@ -325,59 +332,109 @@ function toJsonURLText_String(isKey) {
   return ret;
 }
 
-function toJsonURLText_Array() {
+function toJsonURLText_Array(options = {}, depth = 0) {
   var ret = undefined;
 
   this.forEach(function (e) {
-    while (typeof e === "function") {
-      e = e();
+    if (typeof e === "function") {
+      if (!options.callFunctions) {
+        return;
+      }
+      while (typeof e === "function") {
+        e = e();
+      }
     }
 
-    if (e === undefined || e === null) {
-      if (ret === undefined) {
-        ret = "null";
-      } else {
-        ret += ",null";
+    if (e === undefined) {
+      if (options.ignoreUndefinedArrayMembers) {
+        return;
       }
-      return;
+      e = "null";
+    } else if (e === null) {
+      if (options.ignoreNullArrayMembers) {
+        return;
+      }
+      e = "null";
+    } else {
+      e = e.toJsonURLText(options, depth + 1);
     }
 
     if (ret === undefined) {
-      ret = e.toJsonURLText();
+      ret = e;
+    } else if (!options.wwwFormUrlEncoded || depth > 0) {
+      ret += "," + e;
     } else {
-      ret += "," + e.toJsonURLText();
+      ret += "&" + e;
     }
   });
 
-  return ret === undefined ? "()" : "(" + ret + ")";
+  if (!options.isImplied || depth > 0) {
+    return ret === undefined ? "()" : "(" + ret + ")";
+  }
+
+  return ret === undefined ? "" : ret;
 }
 
-function toJsonURLText_Object() {
+function toJsonURLText_Object(options = {}, depth = 0) {
   var ret = undefined;
   var keys = Object.keys(this);
   var obj = this;
 
   keys.forEach(function (k) {
     if (k === undefined || k === null) {
+      //
+      // I'm not sure this can actually happen. But, handling just in case.
+      //
       return;
     }
 
     var v = obj[k];
-    while (typeof v === "function") {
-      v = v();
+
+    if (typeof v === "function") {
+      if (!options.callFunctions) {
+        return;
+      }
+      while (typeof v === "function") {
+        v = v();
+      }
     }
 
-    var jk = k.toJsonURLText(true);
-    var jv = v === undefined || v === null ? "null" : v.toJsonURLText();
+    if (v === undefined) {
+      if (options.ignoreUndefinedObjectMembers) {
+        return;
+      }
+      v = "null";
+    } else if (v === null) {
+      if (options.ignoreNullObjectMembers) {
+        return;
+      }
+      v = "null";
+    } else {
+      v = v.toJsonURLText(options, depth + 1);
+    }
+
+    const jk = k.toJsonURLText(options, depth, true);
 
     if (ret === undefined) {
-      ret = jk + ":" + jv;
+      if (!options.wwwFormUrlEncoded || depth > 0) {
+        ret = jk + ":" + v;
+      } else {
+        ret = jk + "=" + v;
+      }
     } else {
-      ret += "," + jk + ":" + jv;
+      if (!options.wwwFormUrlEncoded || depth > 0) {
+        ret += "," + jk + ":" + v;
+      } else {
+        ret += "&" + jk + "=" + v;
+      }
     }
   });
 
-  return ret === undefined ? "()" : "(" + ret + ")";
+  if (!options.isImplied || depth > 0) {
+    return ret === undefined ? "()" : "(" + ret + ")";
+  }
+
+  return ret === undefined ? "" : ret;
 }
 
 Object.defineProperty(Array.prototype, "toJsonURLText", {
@@ -515,8 +572,8 @@ class JsonURL {
    *
    * Each instance of this class contains a number of properties that manage
    * the behavior of the parser and the values it returns; these are documented
-   * below. The class instance does not manage parse state -- that state is
-   * local to the parse() function itself. As long as you don't need different
+   * below. The class instance does not manage parse state -- that is local to
+   * the parse() function itself. As long as you don't need different
    * properties (e.g. limits, null value, etc) you may re-use the same Parser
    * instance, even by multiple Workers.
    * @param {Object} prop Initialization properties.
@@ -588,7 +645,7 @@ class JsonURL {
         if (c1 === CHAR_t && c2 === CHAR_r && c3 === CHAR_u && c4 === CHAR_e)
           return forceString ? "true" : true;
         if (c1 === CHAR_n && c2 === CHAR_u && c3 === CHAR_l && c4 === CHAR_l)
-          return forceString ? "null" : this.nullValue;
+          return forceString ? "null" : newNullValue(this);
         break;
       case 5:
         c1 = text.charCodeAt(pos);
@@ -688,12 +745,22 @@ class JsonURL {
    * is exceeded.
    */
   parse(text, options = {}) {
+    if (text === undefined) {
+      return undefined;
+    }
+
     text = String(text);
 
     let end = text.length;
 
     if (end === 0) {
-      return undefined;
+      if (options.impliedArray !== undefined) {
+        return options.impliedArray;
+      }
+      if (options.impliedObject !== undefined) {
+        return options.impliedObject;
+      }
+      throw new SyntaxError(errorMessage(ERR_MSG_EXPECT_VALUE, 0));
     }
 
     if (end > this.maxParseChars) {
@@ -1079,17 +1146,34 @@ class JsonURL {
   /**
    * A static method for coverting a JavaScript value to JSON->URL text.
    * @param {*} value Any value
+   * @param {Object} options stringify options.
+   * You may provide zero more more of the following.
+   * @param {boolean} options.ignoreNullArrayMembers Ignore null array members.
+   * This is false by default.
+   * @param {boolean} options.ignoreNullObjectMembers Ignore null object members.
+   * This is false by default.
+   * @param {boolean} options.ignoreUndefinedArrayMembers Ignore undefined array members.
+   * This is false by default. They will be stringified as null because
+   * undefined is not a valid JSON value.
+   * @param {boolean} options.ignoreUndefinedObjectMembers Ignore undefined object members.
+   * This is true by default. They will be omitted from the stringified
+   * output. This mimics the behavior JSON.stringify().
+   * @param {boolean} options.wwwFormUrlEncoded Enable x-www-form-urlencoded
+   * structural characters.
+   * @param {boolean} options.isImplied Create JSON->URL text for an implied
+   * array or object.
    * @returns {string} JSON->URL text, or undefined if the given value
    * is undefined.
    */
-  static stringify(value) {
+  static stringify(value, options = { ignoreUndefinedObjectMembers: true }) {
     if (value === undefined) {
       return undefined;
     }
     if (value === null) {
       return "null";
     }
-    return value.toJsonURLText();
+
+    return value.toJsonURLText(options, 0);
   }
 }
 
