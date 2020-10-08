@@ -90,6 +90,7 @@ const ERR_MSG_EXTRACHARS = "JSON->URL: unexpected text after composite";
 const ERR_MSG_LIMIT_MAXCHARS = "JSON->URL: MaxParseChars exceeded";
 const ERR_MSG_LIMIT_MAXDEPTH = "JSON->URL: MaxParseDepth exceeded";
 const ERR_MSG_LIMIT_MAXVALUES = "JSON->URL: MaxParseValues exceeded";
+const ERR_MSG_EXPECT_QUOTE = "JSON->URL: quoted string still open";
 
 function parseDigitsLength(text, i, len) {
   var ret = 0;
@@ -265,6 +266,10 @@ function parseLiteralLength(text, i, end, errmsg) {
       default:
         throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, i));
     }
+  }
+
+  if (isQuote) {
+    throw new SyntaxError(errorMessage(ERR_MSG_EXPECT_QUOTE, i));
   }
 
   return end;
