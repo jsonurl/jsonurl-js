@@ -2,6 +2,12 @@
 [![License: MIT](https://img.shields.io/github/license/jsonurl/jsonurl-js.svg?label=License)][license]
 [![NPM version](https://img.shields.io/npm/v/@jsonurl/jsonurl.svg)](https://www.npmjs.com/package/@jsonurl/jsonurl)
 ![CI](https://github.com/jsonurl/jsonurl-js/workflows/ci/badge.svg?branch=master)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=alert_status)](https://sonarcloud.io/dashboard?id=jsonurl-js)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=coverage)](https://sonarcloud.io/dashboard?id=jsonurl-js)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=ncloc)](https://sonarcloud.io/dashboard?id=jsonurl-js)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=security_rating)](https://sonarcloud.io/dashboard?id=jsonurl-js)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=jsonurl-js)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=jsonurl-js)
 [![Known Vulnerabilities](https://snyk.io/test/github/jsonurl/jsonurl-js/badge.svg?targetFile=package.json)](https://snyk.io/test/github/jsonurl/jsonurl-js?targetFile=package.json)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjsonurl%2Fjsonurl-js?ref=badge_shield)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
