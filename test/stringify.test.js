@@ -55,6 +55,7 @@ test.each([
   ["a,b", "'a,b'"],
   ["a,b c", "'a,b+c'"],
   ["Bob & Frank", "Bob+%26+Frank"],
+  ["'hello", "%27hello"],
 ])("JsonURL.stringify(%p)", (value, expected) => {
   expect(JsonURL.stringify(value)).toBe(expected);
 });
