@@ -36,9 +36,9 @@ module.exports = {
   env: {
     es6: true,
   },
-  ignorePatterns: ["node_modules/", "dist/", "backup/", "apidoc/"],
+  ignorePatterns: ["node_modules/", "dist/", "backup/", "apidoc/", "coverage/"],
   rules: {
-    "prettier/prettier": "error",
+    "prettier/prettier": ["error", { endOfLine: "auto" }],
   },
   overrides: [
     {
@@ -48,7 +48,7 @@ module.exports = {
       },
     },
     {
-      files: ["*.config.js", ".eslintrc.js"],
+      files: ["*.config.js", ".eslintrc.js", ".eslintrc.cjs"],
       env: {
         node: true,
       },

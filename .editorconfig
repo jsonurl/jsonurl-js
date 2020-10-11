@@ -8,6 +8,6 @@ end_of_line = lf
 insert_final_newline = true
 charset = utf-8
 
-[*.{json,js,mjs}]
+[*.{json,js,mjs,cjs}]
 indent_size = 2
 
