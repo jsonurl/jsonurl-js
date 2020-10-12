@@ -48,7 +48,7 @@
     "eslint-plugin-jest": "^23.20.0",
     "eslint-plugin-prettier": "^3.1.4",
     "jest": "^26.4.2",
-    "jsdoc": "^3.6.5",
+    "jsdoc": "^3.6.6",
     "prettier": "^2.1.2",
     "rollup": "^2.27.1",
     "rollup-plugin-eslint": "^7.0.0",
