@@ -54,6 +54,12 @@ test.each([
   ["a b c", "a+b+c", "a+b+c"],
   ["a,b", "'a,b'", "a%2Cb"],
   ["a,b c", "'a,b+c'", "a%2Cb+c"],
+  ["a,b,c", "'a,b,c'", "a%2Cb%2Cc"],
+  ["a:b:c", "'a:b:c'", "a%3Ab%3Ac"],
+  ["((()))", "'((()))'", "%x28%x28%x28%x29%x29%x29"],
+  [":::", "':::'", "%3A%3A%3A"],
+  [",,,", "',,,'", "%2C%2C%2C"],
+  ["   ", "+++", "+++"],
   ["Bob & Frank", "Bob+%26+Frank", "Bob+%26+Frank"],
   ["'hello", "%27hello", "'hello"],
 ])("JsonURL.stringify(%p)", (value, expected, expectedISL) => {

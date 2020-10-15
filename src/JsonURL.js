@@ -27,6 +27,10 @@
 
 const rx_decode_space = /\+/g;
 const rx_encode_pctspace = /%20/g;
+const rx_encode_comma = /,/g;
+const rx_encode_colon = /:/g;
+const rx_encode_lparen = /\(/g;
+const rx_encode_rparen = /\)/g;
 const rx_encode_space = / /g;
 
 //
@@ -289,10 +293,10 @@ function parseStringLiteral(text, pos, end, removeQuotes) {
 function encodeStringLiteral(text) {
   let ret = encodeURIComponent(text);
   ret = ret.replace(rx_encode_pctspace, "+");
-  ret = ret.replace(",", "%x2C");
-  ret = ret.replace(":", "%x3A");
-  ret = ret.replace("(", "%x28");
-  ret = ret.replace(")", "%x29");
+  ret = ret.replace(rx_encode_comma, "%x2C");
+  ret = ret.replace(rx_encode_colon, "%x3A");
+  ret = ret.replace(rx_encode_lparen, "%x28");
+  ret = ret.replace(rx_encode_rparen, "%x29");
 
   return ret;
 }
