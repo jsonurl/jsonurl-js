@@ -275,6 +275,28 @@ function parseLiteralLength(text, i, end, errmsg) {
   return end;
 }
 
+function parseStringLiteral(text, pos, end, removeQuotes) {
+  let ret = removeQuotes
+    ? text.substring(pos + 1, end - 1)
+    : text.substring(pos, end);
+
+  ret = ret.replace(rx_decode_space, " ");
+  ret = decodeURIComponent(ret);
+
+  return ret;
+}
+
+function encodeStringLiteral(text) {
+  let ret = encodeURIComponent(text);
+  ret = ret.replace(rx_encode_pctspace, "+");
+  ret = ret.replace(",", "%x2C");
+  ret = ret.replace(":", "%x3A");
+  ret = ret.replace("(", "%x28");
+  ret = ret.replace(")", "%x29");
+
+  return ret;
+}
+
 function toJsonURLText_Boolean() {
   return this === true ? "true" : "false";
 }
@@ -282,6 +304,10 @@ function toJsonURLText_Number() {
   return String(this);
 }
 function toJsonURLText_String(options, depth, isKey) {
+  if (options.impliedStringLiterals) {
+    return encodeStringLiteral(this);
+  }
+
   if (this.length === 0) {
     return "''";
   }
@@ -324,8 +350,7 @@ function toJsonURLText_String(options, depth, isKey) {
     return "'" + this.replace(rx_encode_space, "+") + "'";
   }
 
-  let ret = encodeURIComponent(this);
-  ret = ret.replace(rx_encode_pctspace, "+");
+  let ret = encodeStringLiteral(this);
 
   if (ret.charCodeAt(0) == CHAR_QUOTE) {
     //
@@ -638,7 +663,17 @@ class JsonURL {
    * @param {boolean} forceString True if the resulting literal should be
    * a string, such as in the case of an object key.
    */
-  parseLiteral(text, pos = 0, end = text.length, forceString = false) {
+  parseLiteral(
+    text,
+    pos = 0,
+    end = text.length,
+    forceString = false,
+    impliedStringLiteral = false
+  ) {
+    if (impliedStringLiteral === true) {
+      return parseStringLiteral(text, pos, end, false);
+    }
+
     let c1, c2, c3, c4, c5;
 
     switch (end - pos) {
@@ -707,18 +742,7 @@ class JsonURL {
     //
     // this is a string
     //
-    var ret;
-
-    if (isQuotedString) {
-      ret = text.substring(pos + 1, end - 1);
-    } else {
-      ret = text.substring(pos, end);
-    }
-
-    ret = ret.replace(rx_decode_space, " ");
-    ret = decodeURIComponent(ret);
-
-    return ret;
+    return parseStringLiteral(text, pos, end, isQuotedString);
   }
 
   /**
@@ -745,6 +769,8 @@ class JsonURL {
    * is may use ampersand and equal characters as the value and member
    * separator characters, respetively, at the top-level. This may be
    * combined with prop.impliedArray or prop.impliedObject.
+   * @param {boolean} options.impliedStringLiterals Assume all literals
+   * are strings.
    * @throws SyntaxError if there is a syntax error in the given text
    * @throws Error if a limit given in the constructor (or its default)
    * is exceeded.
@@ -798,7 +824,13 @@ class JsonURL {
         throw new SyntaxError(errorMessage(ERR_MSG_EXPECT_LITERAL, 0));
       }
 
-      return this.parseLiteral(text, 0, end, false);
+      return this.parseLiteral(
+        text,
+        0,
+        end,
+        false,
+        options.impliedStringLiterals
+      );
     } else {
       stateStack.push(STATE_PAREN);
       pos = 1;
@@ -878,7 +910,13 @@ class JsonURL {
           valueStack.checkValueLimit(pos);
 
           c = text.charCodeAt(lvpos);
-          lv = this.parseLiteral(text, pos, lvpos, c === CHAR_COLON);
+          lv = this.parseLiteral(
+            text,
+            pos,
+            lvpos,
+            c === CHAR_COLON,
+            options.impliedStringLiterals
+          );
           pos = lvpos;
 
           switch (c) {
@@ -963,7 +1001,13 @@ class JsonURL {
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_VALUE);
 
           valueStack.checkValueLimit(pos);
-          lv = this.parseLiteral(text, pos, lvpos, false);
+          lv = this.parseLiteral(
+            text,
+            pos,
+            lvpos,
+            false,
+            options.impliedStringLiterals
+          );
           pos = lvpos;
 
           if (pos === end) {
@@ -1039,7 +1083,13 @@ class JsonURL {
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_VALUE);
 
           valueStack.checkValueLimit(pos);
-          lv = this.parseLiteral(text, pos, lvpos, false);
+          lv = this.parseLiteral(
+            text,
+            pos,
+            lvpos,
+            false,
+            options.impliedStringLiterals
+          );
           pos = lvpos;
 
           if (lvpos === end) {
@@ -1132,7 +1182,13 @@ class JsonURL {
               throw new SyntaxError((ERR_MSG_EXPECT_OBJVALUE, lvpos));
           }
 
-          lv = this.parseLiteral(text, pos, lvpos, true);
+          lv = this.parseLiteral(
+            text,
+            pos,
+            lvpos,
+            true,
+            options.impliedStringLiterals
+          );
           pos = lvpos + 1;
 
           stateStack.replace(STATE_OBJECT_HAVE_KEY);
@@ -1167,10 +1223,18 @@ class JsonURL {
    * structural characters.
    * @param {boolean} options.isImplied Create JSON->URL text for an implied
    * array or object.
+   * @param {boolean} options.impliedStringLiterals Assume all literals
+   * are strings.
    * @returns {string} JSON->URL text, or undefined if the given value
    * is undefined.
    */
-  static stringify(value, options = { ignoreUndefinedObjectMembers: true }) {
+  static stringify(
+    value,
+    options = {
+      ignoreUndefinedObjectMembers: true,
+      impliedStringLiterals: false,
+    }
+  ) {
     if (value === undefined) {
       return undefined;
     }

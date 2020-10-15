@@ -34,9 +34,10 @@ function encodedString(s) {
     .replace(/:/, "%3A");
 }
 
-function runTest(text, value, keyValue) {
+function runTest(text, value, keyValue, strLitValue) {
   expect(u.parseLiteral(text)).toBe(value);
   expect(u.parseLiteral(text, 0, text.length, true)).toBe(keyValue);
+  expect(u.parseLiteral(text, 0, text.length, true, true)).toBe(strLitValue);
 
   //
   // verify that parseLiteral() and parse() return the same thing (as
@@ -116,36 +117,39 @@ test.each([
 ])("JsonURL.parseLiteral(%p)", (value) => {
   let keyValue = String(value);
   let text = typeof value === "string" ? encodedString(keyValue) : keyValue;
-  runTest(text, value, keyValue);
+  runTest(text, value, keyValue, keyValue);
 });
 
 test.each([
   //
   // fixed point
   //
-  ["-3e0", -3],
-  ["1e+2", 1e2],
-  ["-2e+1", -2e1],
+  ["-3e0", -3, "-3e0"],
+  ["1e+2", 1e2, "1e 2"],
+  ["-2e+1", -2e1, "-2e 1"],
 
   //
   // floating point
   //
-  ["156.911e+2", 156.911e2],
+  ["156.911e+2", 156.911e2, "156.911e 2"],
 
   //
   // string
   //
-  ["'hello'", "hello"],
-  ["hello%2Bworld", "hello+world"],
-  ["y+%3D+mx+%2B+b", "y = mx + b"],
-  ["a%3Db%26c%3Dd", "a=b&c=d"],
-  ["hello%F0%9F%8D%95world", "hello\uD83C\uDF55world"],
-  ["-e+", "-e "],
-  ["-e+1", "-e 1"],
-  ["1e%2B1", "1e+1"],
-])("JsonURL.parseLiteral(%p)", (text, value) => {
+  ["'hello'", "hello", "'hello'", undefined],
+  ["hello%2Bworld", "hello+world", undefined],
+  ["y+%3D+mx+%2B+b", "y = mx + b", undefined],
+  ["a%3Db%26c%3Dd", "a=b&c=d", undefined],
+  ["hello%F0%9F%8D%95world", "hello\uD83C\uDF55world", undefined],
+  ["-e+", "-e ", undefined],
+  ["-e+1", "-e 1", undefined],
+  ["1e%2B1", "1e+1", undefined],
+])("JsonURL.parseLiteral(%p)", (text, value, strLitValue) => {
   let keyValue = typeof value === "string" ? value : text;
-  runTest(text, value, keyValue);
+  if (strLitValue === undefined) {
+    strLitValue = value;
+  }
+  runTest(text, value, keyValue, strLitValue);
 });
 
 test("JsonURL.parseLiteral('null')", () => {
