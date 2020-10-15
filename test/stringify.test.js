@@ -33,31 +33,35 @@ test("JsonURL.stringify(undefined)", () => {
 });
 
 test.each([
-  [true, "true"],
-  [false, "false"],
-  [null, "null"],
-  ["true", "'true'"],
-  ["false", "'false'"],
-  ["null", "'null'"],
-  ["()", "'()'"],
-  ["{}", "%7B%7D"],
-  [0, "0"],
-  [1.1, "1.1"],
-  ["a", "a"],
-  ["1", "'1'"],
-  ["2.3", "'2.3'"],
-  ["2e1", "'2e1'"],
-  ["-4", "'-4'"],
-  ["5a", "5a"],
-  ["'1+2'", "%271%2B2'"],
-  ["1e+1", "1e%2B1"],
-  ["a b c", "a+b+c"],
-  ["a,b", "'a,b'"],
-  ["a,b c", "'a,b+c'"],
-  ["Bob & Frank", "Bob+%26+Frank"],
-  ["'hello", "%27hello"],
-])("JsonURL.stringify(%p)", (value, expected) => {
+  [true, "true", "true"],
+  [false, "false", "false"],
+  [null, "null", "null"],
+  ["true", "'true'", "true"],
+  ["false", "'false'", "false"],
+  ["null", "'null'", "null"],
+  ["()", "'()'", "%x28%x29"],
+  ["{}", "%7B%7D", "%7B%7D"],
+  [0, "0", "0"],
+  [1.1, "1.1", "1.1"],
+  ["a", "a", "a"],
+  ["1", "'1'", "1"],
+  ["2.3", "'2.3'", "2.3"],
+  ["2e1", "'2e1'", "2e1"],
+  ["-4", "'-4'", "-4"],
+  ["5a", "5a", "5a"],
+  ["'1+2'", "%271%2B2'", "'1%2B2'"],
+  ["1e+1", "1e%2B1", "1e%2B1"],
+  ["a b c", "a+b+c", "a+b+c"],
+  ["a,b", "'a,b'", "a%2Cb"],
+  ["a,b c", "'a,b+c'", "a%2Cb+c"],
+  ["Bob & Frank", "Bob+%26+Frank", "Bob+%26+Frank"],
+  ["'hello", "%27hello", "'hello"],
+])("JsonURL.stringify(%p)", (value, expected, expectedISL) => {
   expect(JsonURL.stringify(value)).toBe(expected);
+
+  expect(JsonURL.stringify(value, { impliedStringLiterals: true })).toBe(
+    expectedISL
+  );
 });
 
 test.each([
