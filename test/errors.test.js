@@ -57,6 +57,9 @@ test.each([
   "'a=b'",
   "'a&b'",
   "'hello",
+  "(a:)",
+  "(:a)",
+  "(a,,c)",
 ])("JsonURL.parse(%p)", (text) => {
   const u = new JsonURL();
 

@@ -32,10 +32,24 @@ test("JsonURL.stringify(undefined)", () => {
   expect(JsonURL.stringify(undefined)).toBeUndefined();
 });
 
+test("JsonURL.stringify(null, impliedStringLiterals)", () => {
+  expect(() => {
+    JsonURL.stringify(null, { impliedStringLiterals: true });
+  }).toThrow(SyntaxError);
+});
+
+test("JsonURL.stringify('', impliedStringLiterals)", () => {
+  expect(() => {
+    JsonURL.stringify("", {
+      impliedStringLiterals: true,
+      allowEmptyUnquotedValues: false,
+    });
+  }).toThrow(SyntaxError);
+});
+
 test.each([
   [true, "true", "true"],
   [false, "false", "false"],
-  [null, "null", "null"],
   ["true", "'true'", "true"],
   ["false", "'false'", "false"],
   ["null", "'null'", "null"],
@@ -62,6 +76,7 @@ test.each([
   ["   ", "+++", "+++"],
   ["Bob & Frank", "Bob+%26+Frank", "Bob+%26+Frank"],
   ["'hello", "%27hello", "'hello"],
+  [1e5, "100000", "100000"],
 ])("JsonURL.stringify(%p)", (value, expected, expectedISL) => {
   expect(JsonURL.stringify(value)).toBe(expected);
 
@@ -83,6 +98,15 @@ test.each([
     { ignoreUndefinedObjectMembers: false },
     "a:null,b:1",
   ],
+  [{ "": "a", b: 1 }, { allowEmptyUnquotedKeys: true }, ":a,b:1"],
+  [{ a: "", b: 1 }, { allowEmptyUnquotedValues: true }, "a:,b:1"],
+  [["a", "", "b"], { allowEmptyUnquotedValues: true }, "a,,b"],
+  [
+    { a: "", b: "1", c: "false", d: "true" },
+    { impliedStringLiterals: true },
+    "a:,b:1,c:false,d:true",
+  ],
+  [["a", "", "b"], { impliedStringLiterals: true }, "a,,b"],
   [
     { a: 1, b: 2, c: { d: 4, e: 5 } },
     { wwwFormUrlEncoded: true },

@@ -37,7 +37,9 @@ function encodedString(s) {
 function runTest(text, value, keyValue, strLitValue) {
   expect(u.parseLiteral(text)).toBe(value);
   expect(u.parseLiteral(text, 0, text.length, true)).toBe(keyValue);
-  expect(u.parseLiteral(text, 0, text.length, true, true)).toBe(strLitValue);
+  expect(
+    u.parseLiteral(text, 0, text.length, true, { impliedStringLiterals: true })
+  ).toBe(strLitValue);
 
   //
   // verify that parseLiteral() and parse() return the same thing (as
