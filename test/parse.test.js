@@ -75,6 +75,18 @@ test.each([
   );
 });
 
+test.each([
+  ["(a,,c)", { allowEmptyUnquotedValues: true }, ["a", "", "c"]],
+  [
+    "(a:,:d,e:f)",
+    { allowEmptyUnquotedKeys: true, allowEmptyUnquotedValues: true },
+    { a: "", "": "d", e: "f" },
+  ],
+])("JsonURL.parse(%s)", (text, options, expected) => {
+  expect(u.parse(text, options)).toEqual(expected);
+  expect(JsonURL.stringify(expected, options)).toBe(text);
+});
+
 test.each([undefined])("JsonURL.parse(%p)", (text) => {
   expect(u.parse(text)).toBeUndefined();
 });

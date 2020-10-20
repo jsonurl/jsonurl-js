@@ -95,6 +95,10 @@ const ERR_MSG_LIMIT_MAXCHARS = "JSON->URL: MaxParseChars exceeded";
 const ERR_MSG_LIMIT_MAXDEPTH = "JSON->URL: MaxParseDepth exceeded";
 const ERR_MSG_LIMIT_MAXVALUES = "JSON->URL: MaxParseValues exceeded";
 const ERR_MSG_EXPECT_QUOTE = "JSON->URL: quoted string still open";
+const ERR_MSG_IMPLIED_STRING_NULL =
+  "JSON->URL: can not represent null with implied strings";
+const ERR_MSG_IMPLIED_STRING_EMPTY =
+  "JSON->URL: the empty string is not allowed";
 
 function parseDigitsLength(text, i, len) {
   var ret = 0;
@@ -204,15 +208,19 @@ function errorMessage(msg, pos) {
 
 function parseLiteralLength(text, i, end, errmsg) {
   var isQuote = false;
-  var start = i;
 
   if (i === end) {
-    throw new SyntaxError(errorMessage(errmsg, i));
+    if (errmsg) {
+      throw new SyntaxError(errorMessage(errmsg, i));
+    }
+    return 0;
   }
+
   if (text.charCodeAt(i) === CHAR_QUOTE) {
     isQuote = true;
     i++;
   }
+
   for (; i < end; i++) {
     var c = text.charCodeAt(i);
     if (c >= 0x41 && c <= 0x5a) {
@@ -252,9 +260,6 @@ function parseLiteralLength(text, i, end, errmsg) {
       case CHAR_PAREN_OPEN:
       case CHAR_PAREN_CLOSE:
         if (!isQuote) {
-          if (i === start) {
-            throw new SyntaxError(errorMessage(errmsg, start));
-          }
           return i;
         }
         continue;
@@ -263,9 +268,6 @@ function parseLiteralLength(text, i, end, errmsg) {
         //
         // these are forbidden, quoted or otherwise.
         //
-        if (i === start) {
-          throw new SyntaxError(errorMessage(errmsg, start));
-        }
         return i;
       default:
         throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, i));
@@ -279,7 +281,14 @@ function parseLiteralLength(text, i, end, errmsg) {
   return end;
 }
 
-function parseStringLiteral(text, pos, end, removeQuotes) {
+function parseStringLiteral(text, pos, end, removeQuotes, emptyOK) {
+  if (end <= pos) {
+    if (emptyOK) {
+      return "";
+    }
+    throw new SyntaxError(ERR_MSG_IMPLIED_STRING_EMPTY);
+  }
+
   let ret = removeQuotes
     ? text.substring(pos + 1, end - 1)
     : text.substring(pos, end);
@@ -301,19 +310,54 @@ function encodeStringLiteral(text) {
   return ret;
 }
 
+function toJsonURLText_Null(options) {
+  if (options.impliedStringLiterals) {
+    throw new SyntaxError(ERR_MSG_IMPLIED_STRING_NULL);
+  }
+
+  return "null";
+}
+
+function toJsonURLText_EmptyString(options, isKey) {
+  const emptyOK = isKey
+    ? options.allowEmptyUnquotedKeys
+    : options.allowEmptyUnquotedValues;
+
+  if (emptyOK) {
+    return "";
+  }
+
+  if (options.impliedStringLiterals) {
+    throw new SyntaxError(ERR_MSG_IMPLIED_STRING_EMPTY);
+  }
+
+  return "''";
+}
+
 function toJsonURLText_Boolean() {
   return this === true ? "true" : "false";
 }
-function toJsonURLText_Number() {
-  return String(this);
-}
-function toJsonURLText_String(options, depth, isKey) {
-  if (options.impliedStringLiterals) {
-    return encodeStringLiteral(this);
+
+function toJsonURLText_Number(options) {
+  const ret = String(this);
+
+  if (options.impliedStringLiterals && ret.indexOf("+") !== -1) {
+    //
+    // I don't think this will happen, but just in case...
+    //
+    return encodeStringLiteral(ret);
   }
 
+  return ret;
+}
+
+function toJsonURLText_String(options, depth, isKey) {
   if (this.length === 0) {
-    return "''";
+    return toJsonURLText_EmptyString(options, isKey);
+  }
+
+  if (options.impliedStringLiterals) {
+    return encodeStringLiteral(this);
   }
 
   if (rx_encode_quoted_literal.test(this)) {
@@ -333,7 +377,6 @@ function toJsonURLText_String(options, depth, isKey) {
     // literal and does not needs to be quoted.
     //
     return encodeURIComponent(this);
-    // return "'" + encodeURIComponent(this) + "'";
   }
   if (rx_encode_string_safe.test(this)) {
     //
@@ -383,12 +426,12 @@ function toJsonURLText_Array(options = {}, depth = 0) {
       if (options.ignoreUndefinedArrayMembers) {
         return;
       }
-      e = "null";
+      e = toJsonURLText_Null(options);
     } else if (e === null) {
       if (options.ignoreNullArrayMembers) {
         return;
       }
-      e = "null";
+      e = toJsonURLText_Null(options);
     } else {
       e = e.toJsonURLText(options, depth + 1);
     }
@@ -437,12 +480,12 @@ function toJsonURLText_Object(options = {}, depth = 0) {
       if (options.ignoreUndefinedObjectMembers) {
         return;
       }
-      v = "null";
+      v = toJsonURLText_Null(options);
     } else if (v === null) {
       if (options.ignoreNullObjectMembers) {
         return;
       }
-      v = "null";
+      v = toJsonURLText_Null(options);
     } else {
       v = v.toJsonURLText(options, depth + 1);
     }
@@ -672,10 +715,14 @@ class JsonURL {
     pos = 0,
     end = text.length,
     forceString = false,
-    impliedStringLiteral = false
+    options = {}
   ) {
-    if (impliedStringLiteral === true) {
-      return parseStringLiteral(text, pos, end, false);
+    const emptyOK = forceString
+      ? options.allowEmptyUnquotedKeys
+      : options.allowEmptyUnquotedValues;
+
+    if (options.impliedStringLiterals === true) {
+      return parseStringLiteral(text, pos, end, false, emptyOK);
     }
 
     let c1, c2, c3, c4, c5;
@@ -746,7 +793,7 @@ class JsonURL {
     //
     // this is a string
     //
-    return parseStringLiteral(text, pos, end, isQuotedString);
+    return parseStringLiteral(text, pos, end, isQuotedString, emptyOK);
   }
 
   /**
@@ -775,6 +822,10 @@ class JsonURL {
    * combined with prop.impliedArray or prop.impliedObject.
    * @param {boolean} options.impliedStringLiterals Assume all literals
    * are strings.
+   * @param {boolean} options.allowEmptyUnquotedValues Allow the empty string
+   * as a value.
+   * @param {boolean} options.allowEmptyUnquotedKeys Allow the empty string
+   * as a key.
    * @throws SyntaxError if there is a syntax error in the given text
    * @throws Error if a limit given in the constructor (or its default)
    * is exceeded.
@@ -823,18 +874,12 @@ class JsonURL {
       // structural characters) but not valid when inside a composite.
       // I don't think I want that.
       //
-      let lvpos = parseLiteralLength(text, 0, end, ERR_MSG_EXPECT_LITERAL);
+      let lvpos = parseLiteralLength(text, 0, end, undefined);
       if (lvpos !== end) {
         throw new SyntaxError(errorMessage(ERR_MSG_EXPECT_LITERAL, 0));
       }
 
-      return this.parseLiteral(
-        text,
-        0,
-        end,
-        false,
-        options.impliedStringLiterals
-      );
+      return this.parseLiteral(text, 0, end, false, options);
     } else {
       stateStack.push(STATE_PAREN);
       pos = 1;
@@ -914,13 +959,7 @@ class JsonURL {
           valueStack.checkValueLimit(pos);
 
           c = text.charCodeAt(lvpos);
-          lv = this.parseLiteral(
-            text,
-            pos,
-            lvpos,
-            c === CHAR_COLON,
-            options.impliedStringLiterals
-          );
+          lv = this.parseLiteral(text, pos, lvpos, c === CHAR_COLON, options);
           pos = lvpos;
 
           switch (c) {
@@ -1005,13 +1044,7 @@ class JsonURL {
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_VALUE);
 
           valueStack.checkValueLimit(pos);
-          lv = this.parseLiteral(
-            text,
-            pos,
-            lvpos,
-            false,
-            options.impliedStringLiterals
-          );
+          lv = this.parseLiteral(text, pos, lvpos, false, options);
           pos = lvpos;
 
           if (pos === end) {
@@ -1087,13 +1120,7 @@ class JsonURL {
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_VALUE);
 
           valueStack.checkValueLimit(pos);
-          lv = this.parseLiteral(
-            text,
-            pos,
-            lvpos,
-            false,
-            options.impliedStringLiterals
-          );
+          lv = this.parseLiteral(text, pos, lvpos, false, options);
           pos = lvpos;
 
           if (lvpos === end) {
@@ -1186,13 +1213,7 @@ class JsonURL {
               throw new SyntaxError((ERR_MSG_EXPECT_OBJVALUE, lvpos));
           }
 
-          lv = this.parseLiteral(
-            text,
-            pos,
-            lvpos,
-            true,
-            options.impliedStringLiterals
-          );
+          lv = this.parseLiteral(text, pos, lvpos, true, options);
           pos = lvpos + 1;
 
           stateStack.replace(STATE_OBJECT_HAVE_KEY);
@@ -1229,21 +1250,43 @@ class JsonURL {
    * array or object.
    * @param {boolean} options.impliedStringLiterals Assume all literals
    * are strings.
+   * @param {boolean} options.allowEmptyUnquotedValues Allow the empty string
+   * as a value.
+   * @param {boolean} options.allowEmptyUnquotedKeys Allow the empty string
+   * as a key.
    * @returns {string} JSON->URL text, or undefined if the given value
    * is undefined.
    */
-  static stringify(
-    value,
-    options = {
-      ignoreUndefinedObjectMembers: true,
-      impliedStringLiterals: false,
+  static stringify(value, options = {}) {
+    //
+    // defaults
+    //
+    if (options.impliedStringLiterals) {
+      if (options.ignoreNullArrayMembers === undefined) {
+        options.ignoreNullArrayMembers = true;
+      }
+      if (options.ignoreNullObjectMembers === undefined) {
+        options.ignoreNullObjectMembers = true;
+      }
+      if (options.ignoreUndefinedArrayMembers === undefined) {
+        options.ignoreUndefinedArrayMembers = true;
+      }
+      if (options.ignoreUndefinedObjectMembers === undefined) {
+        options.ignoreUndefinedObjectMembers = true;
+      }
+      if (options.allowEmptyUnquotedValues === undefined) {
+        options.allowEmptyUnquotedValues = true;
+      }
     }
-  ) {
+    if (options.ignoreUndefinedObjectMembers === undefined) {
+      options.ignoreUndefinedObjectMembers = true;
+    }
+
     if (value === undefined) {
       return undefined;
     }
     if (value === null) {
-      return "null";
+      return toJsonURLText_Null(options);
     }
 
     return value.toJsonURLText(options, 0);
