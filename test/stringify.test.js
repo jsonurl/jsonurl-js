@@ -102,6 +102,11 @@ test.each([
   [{ a: "", b: 1 }, { allowEmptyUnquotedValues: true }, "a:,b:1"],
   [["a", "", "b"], { allowEmptyUnquotedValues: true }, "a,,b"],
   [
+    { a: "", "": "d", e: "f" },
+    { allowEmptyUnquotedKeys: true, allowEmptyUnquotedValues: true },
+    "a:,:d,e:f",
+  ],
+  [
     { a: "", b: "1", c: "false", d: "true" },
     { impliedStringLiterals: true },
     "a:,b:1,c:false,d:true",
@@ -111,6 +116,12 @@ test.each([
     { a: 1, b: 2, c: { d: 4, e: 5 } },
     { wwwFormUrlEncoded: true },
     "a=1&b=2&c=(d:4,e:5)",
+  ],
+  [["a", null, "b"], { coerceNullToEmptyString: true }, "a,'',b"],
+  [
+    ["a", null, "b"],
+    { coerceNullToEmptyString: true, allowEmptyUnquotedValues: true },
+    "a,,b",
   ],
 ])("JsonURL.stringify(%p, %p)", (value, options, expected) => {
   expect(JsonURL.stringify(value, options)).toBe("(" + expected + ")");

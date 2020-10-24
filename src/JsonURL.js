@@ -100,6 +100,32 @@ const ERR_MSG_IMPLIED_STRING_NULL =
 const ERR_MSG_IMPLIED_STRING_EMPTY =
   "JSON->URL: the empty string is not allowed";
 
+function optionsDefault(options, stringify = false) {
+  if (options.impliedStringLiterals) {
+    if (options.ignoreNullArrayMembers === undefined && stringify) {
+      options.ignoreNullArrayMembers = true;
+    }
+    if (options.ignoreNullObjectMembers === undefined && stringify) {
+      options.ignoreNullObjectMembers = true;
+    }
+    if (options.ignoreUndefinedArrayMembers === undefined && stringify) {
+      options.ignoreUndefinedArrayMembers = true;
+    }
+    if (options.ignoreUndefinedObjectMembers === undefined && stringify) {
+      options.ignoreUndefinedObjectMembers = true;
+    }
+    if (options.allowEmptyUnquotedValues === undefined) {
+      options.allowEmptyUnquotedValues = true;
+    }
+    if (options.allowEmptyUnquotedKeys === undefined) {
+      options.allowEmptyUnquotedKeys = true;
+    }
+  }
+  if (options.ignoreUndefinedObjectMembers === undefined && stringify) {
+    options.ignoreUndefinedObjectMembers = true;
+  }
+}
+
 function parseDigitsLength(text, i, len) {
   var ret = 0;
 
@@ -299,6 +325,42 @@ function parseStringLiteral(text, pos, end, removeQuotes, emptyOK) {
   return ret;
 }
 
+function parseTrueFalseNull(text, pos, end, forceString, parser) {
+  let c1, c2, c3, c4, c5;
+
+  switch (end - pos) {
+    case 4:
+      c1 = text.charCodeAt(pos);
+      c2 = text.charCodeAt(pos + 1);
+      c3 = text.charCodeAt(pos + 2);
+      c4 = text.charCodeAt(pos + 3);
+      if (c1 === CHAR_t && c2 === CHAR_r && c3 === CHAR_u && c4 === CHAR_e)
+        return forceString ? "true" : true;
+      if (c1 === CHAR_n && c2 === CHAR_u && c3 === CHAR_l && c4 === CHAR_l)
+        return forceString ? "null" : newNullValue(parser);
+      break;
+    case 5:
+      c1 = text.charCodeAt(pos);
+      c2 = text.charCodeAt(pos + 1);
+      c3 = text.charCodeAt(pos + 2);
+      c4 = text.charCodeAt(pos + 3);
+      c5 = text.charCodeAt(pos + 4);
+      if (
+        c1 === CHAR_f &&
+        c2 === CHAR_a &&
+        c3 === CHAR_l &&
+        c4 === CHAR_s &&
+        c5 === CHAR_e
+      )
+        return forceString ? "false" : false;
+      break;
+    default:
+      break;
+  }
+
+  return undefined;
+}
+
 function encodeStringLiteral(text) {
   let ret = encodeURIComponent(text);
   ret = ret.replace(rx_encode_pctspace, "+");
@@ -311,6 +373,9 @@ function encodeStringLiteral(text) {
 }
 
 function toJsonURLText_Null(options) {
+  if (options.coerceNullToEmptyString) {
+    return toJsonURLText_EmptyString(options, false);
+  }
   if (options.impliedStringLiterals) {
     throw new SyntaxError(ERR_MSG_IMPLIED_STRING_NULL);
   }
@@ -725,36 +790,12 @@ class JsonURL {
       return parseStringLiteral(text, pos, end, false, emptyOK);
     }
 
-    let c1, c2, c3, c4, c5;
-
-    switch (end - pos) {
-      case 4:
-        c1 = text.charCodeAt(pos);
-        c2 = text.charCodeAt(pos + 1);
-        c3 = text.charCodeAt(pos + 2);
-        c4 = text.charCodeAt(pos + 3);
-        if (c1 === CHAR_t && c2 === CHAR_r && c3 === CHAR_u && c4 === CHAR_e)
-          return forceString ? "true" : true;
-        if (c1 === CHAR_n && c2 === CHAR_u && c3 === CHAR_l && c4 === CHAR_l)
-          return forceString ? "null" : newNullValue(this);
-        break;
-      case 5:
-        c1 = text.charCodeAt(pos);
-        c2 = text.charCodeAt(pos + 1);
-        c3 = text.charCodeAt(pos + 2);
-        c4 = text.charCodeAt(pos + 3);
-        c5 = text.charCodeAt(pos + 4);
-        if (
-          c1 === CHAR_f &&
-          c2 === CHAR_a &&
-          c3 === CHAR_l &&
-          c4 === CHAR_s &&
-          c5 === CHAR_e
-        )
-          return forceString ? "false" : false;
-        break;
-      default:
-        break;
+    let litval = parseTrueFalseNull(text, pos, end, forceString, this);
+    if (litval !== undefined) {
+      if (litval === null && options.coerceNullToEmptyString) {
+        return "";
+      }
+      return litval;
     }
 
     var isQuotedString = false;
@@ -823,9 +864,13 @@ class JsonURL {
    * @param {boolean} options.impliedStringLiterals Assume all literals
    * are strings.
    * @param {boolean} options.allowEmptyUnquotedValues Allow the empty string
-   * as a value.
+   * as a value to be represented as a zero legnth string rather than
+   * bac-to-back single quotes.
    * @param {boolean} options.allowEmptyUnquotedKeys Allow the empty string
-   * as a key.
+   * as a key to be represented as a zero legnth string rather than
+   * bac-to-back single quotes.
+   * @param {boolean} options.coerceNullToEmptyString Replace instances
+   * of the null value with an empty string.
    * @throws SyntaxError if there is a syntax error in the given text
    * @throws Error if a limit given in the constructor (or its default)
    * is exceeded.
@@ -834,6 +879,11 @@ class JsonURL {
     if (text === undefined) {
       return undefined;
     }
+
+    //
+    // defaults
+    //
+    optionsDefault(options, true);
 
     text = String(text);
 
@@ -1251,9 +1301,13 @@ class JsonURL {
    * @param {boolean} options.impliedStringLiterals Assume all literals
    * are strings.
    * @param {boolean} options.allowEmptyUnquotedValues Allow the empty string
-   * as a value.
+   * as a value to be represented as a zero legnth string rather than
+   * bac-to-back single quotes.
    * @param {boolean} options.allowEmptyUnquotedKeys Allow the empty string
-   * as a key.
+   * as a key to be represented as a zero legnth string rather than
+   * bac-to-back single quotes.
+   * @param {boolean} options.coerceNullToEmptyString Replace instances
+   * of the null value with an empty string.
    * @returns {string} JSON->URL text, or undefined if the given value
    * is undefined.
    */
@@ -1261,26 +1315,7 @@ class JsonURL {
     //
     // defaults
     //
-    if (options.impliedStringLiterals) {
-      if (options.ignoreNullArrayMembers === undefined) {
-        options.ignoreNullArrayMembers = true;
-      }
-      if (options.ignoreNullObjectMembers === undefined) {
-        options.ignoreNullObjectMembers = true;
-      }
-      if (options.ignoreUndefinedArrayMembers === undefined) {
-        options.ignoreUndefinedArrayMembers = true;
-      }
-      if (options.ignoreUndefinedObjectMembers === undefined) {
-        options.ignoreUndefinedObjectMembers = true;
-      }
-      if (options.allowEmptyUnquotedValues === undefined) {
-        options.allowEmptyUnquotedValues = true;
-      }
-    }
-    if (options.ignoreUndefinedObjectMembers === undefined) {
-      options.ignoreUndefinedObjectMembers = true;
-    }
+    optionsDefault(options, true);
 
     if (value === undefined) {
       return undefined;
