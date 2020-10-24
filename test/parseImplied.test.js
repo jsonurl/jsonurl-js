@@ -27,9 +27,9 @@ import JsonURL from "../src/JsonURL.js";
 const u = new JsonURL();
 
 test.each([
-  ["", { impliedArray: [], impliedOnly: false }, []],
-  ["()", { impliedArray: [], impliedOnly: false }, [{}]],
-  ["(1)", { impliedArray: [], impliedOnly: false }, [[1]]],
+  ["", { impliedArray: [], _impliedOnly: false }, []],
+  ["()", { impliedArray: [], _impliedOnly: false }, [{}]],
+  ["(1)", { impliedArray: [], _impliedOnly: false }, [[1]]],
   ["", { impliedObject: {} }, {}],
   ["a:()", { impliedObject: {} }, { a: {} }],
   ["a:(1)", { impliedObject: {} }, { a: [1] }],
@@ -48,7 +48,7 @@ test.each([
     { a: { b: { c: ["d"] } }, e: "f" },
   ],
 ])("JsonURL.parse(%p, %p)", (text, options, expected) => {
-  if (options.impliedOnly !== false) {
+  if (options._impliedOnly !== false) {
     expect(() => {
       u.parse(text);
     }).toThrow(SyntaxError);

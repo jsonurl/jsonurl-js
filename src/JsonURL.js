@@ -100,6 +100,10 @@ const ERR_MSG_IMPLIED_STRING_NULL =
 const ERR_MSG_IMPLIED_STRING_EMPTY =
   "JSON->URL: the empty string is not allowed";
 
+function defaultGetMissingValue(pos) {
+  throw new SyntaxError((ERR_MSG_EXPECT_OBJVALUE, pos));
+}
+
 function optionsDefault(options, stringify = false) {
   if (options.impliedStringLiterals) {
     if (options.ignoreNullArrayMembers === undefined && stringify) {
@@ -842,13 +846,13 @@ class JsonURL {
    * @param {string} text The text to parse.
    * @param {Object} options parse options.
    * You may provide zero more more of the following.
-   * @param {array} options.impliedArray An implied array.
+   * @param {Array} options.impliedArray An implied array.
    * The parse() method implements a parser for the grammar oulined in
    * section 2.7 of the JSON->URL specification. The given parse text
    * is assumed to be an array, and the leading and trailing parens must
    * not be present. The given prop.impliedArray value will be populated
    * and returned.
-   * @param {object} options.impliedObject An implied object.
+   * @param {Object} options.impliedObject An implied object.
    * The parse() method implements a parser for the grammar oulined in
    * section 2.8 of the JSON->URL specification. The given parse text
    * is assumed to be an object, and the leading and trailing parens must
@@ -861,16 +865,18 @@ class JsonURL {
    * is may use ampersand and equal characters as the value and member
    * separator characters, respetively, at the top-level. This may be
    * combined with prop.impliedArray or prop.impliedObject.
-   * @param {boolean} options.impliedStringLiterals Assume all literals
-   * are strings.
-   * @param {boolean} options.allowEmptyUnquotedValues Allow the empty string
-   * as a value to be represented as a zero legnth string rather than
-   * bac-to-back single quotes.
-   * @param {boolean} options.allowEmptyUnquotedKeys Allow the empty string
-   * as a key to be represented as a zero legnth string rather than
-   * bac-to-back single quotes.
-   * @param {boolean} options.coerceNullToEmptyString Replace instances
-   * of the null value with an empty string.
+   * @param {boolean} options.impliedStringLiterals Assume all
+   * literals are strings.
+   * @param {boolean} options.allowEmptyUnquotedValues Allow the
+   * empty string as a value to be represented as a zero legnth string rather
+   * than back-to-back single quotes.
+   * @param {boolean} options.allowEmptyUnquotedKeys Allow the
+   * empty string as a key to be represented as a zero legnth string rather
+   * than back-to-back single quotes.
+   * @param {boolean} options.coerceNullToEmptyString Replace
+   * instances of the null value with an empty string.
+   * @param {function} options.getMissingValue Provides a value for a
+   * missing, top-level value.
    * @throws SyntaxError if there is a syntax error in the given text
    * @throws Error if a limit given in the constructor (or its default)
    * is exceeded.
@@ -905,6 +911,7 @@ class JsonURL {
 
     let valueStack = new ValueStack(this);
     let stateStack = new StateStack(this);
+    let getMissingValue = options.getMissingValue || defaultGetMissingValue;
     let pos = 0;
 
     if (options.impliedObject !== undefined) {
@@ -1239,7 +1246,14 @@ class JsonURL {
 
         case STATE_IN_OBJECT:
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_LITERAL);
+          lv = this.parseLiteral(text, pos, lvpos, true, options);
+          pos = lvpos;
+
           if (lvpos === end) {
+            if (options.impliedObject && stateStack.depth() == 0) {
+              valueStack.push(lv, getMissingValue(lv));
+              return valueStack.popObjectValue();
+            }
             //
             // I don't know that this is actually possible -- I haven't
             // found a test case yet. But, if it is possible, it's an error.
@@ -1259,13 +1273,27 @@ class JsonURL {
             case CHAR_COLON:
               break;
 
+            case CHAR_AMP:
+              if (!options.wwwFormUrlEncoded || stateStack.depth() > 0) {
+                throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, pos));
+              }
+            // fall through
+            case CHAR_COMMA:
+              //
+              // a key that's missing a value.
+              //
+              if (options.impliedObject && stateStack.depth() == 0) {
+                stateStack.replace(STATE_OBJECT_AFTER_ELEMENT);
+                valueStack.push(lv, getMissingValue(lv));
+                continue;
+              }
+            // fall through
+
             default:
               throw new SyntaxError((ERR_MSG_EXPECT_OBJVALUE, lvpos));
           }
 
-          lv = this.parseLiteral(text, pos, lvpos, true, options);
-          pos = lvpos + 1;
-
+          pos++;
           stateStack.replace(STATE_OBJECT_HAVE_KEY);
           valueStack.push(lv);
           continue;

@@ -35,6 +35,36 @@ test.each([
   ["a=b", { impliedObject: {} }, { a: "b" }],
   ["a=b&c=d", { impliedObject: {} }, { a: "b", c: "d" }],
   ["a:b&c=d&e:(f:g)", { impliedObject: {} }, { a: "b", c: "d", e: { f: "g" } }],
+  [
+    "a&c=d",
+    {
+      impliedObject: {},
+      getMissingValue: (key) => {
+        switch (key) {
+          case "a":
+            return true;
+          default:
+            return undefined;
+        }
+      },
+    },
+    { a: true, c: "d" },
+  ],
+  [
+    "a=b&c",
+    {
+      impliedObject: {},
+      getMissingValue: (key) => {
+        switch (key) {
+          case "c":
+            return true;
+          default:
+            return undefined;
+        }
+      },
+    },
+    { a: "b", c: true },
+  ],
 ])("JsonURL.parse(%p, %p)", (text, options, expected) => {
   const u = new JsonURL();
 
@@ -55,7 +85,7 @@ test.each([
   }
 
   //
-  // options.wwwFormUrlEncoded = true, so these should all succeed.
+  // options.wwwFormUrlEncoded = true, so this should succeed.
   //
   expect(u.parse(text, options)).toEqual(expected);
 
@@ -70,5 +100,7 @@ test.each([
   // options.wwwFormUrlEncoded = true still, just removing the
   // implied value.
   //
-  expect(u.parse("(" + text + ")", options)).toEqual(expected);
+  if (options.getMissingValue === undefined) {
+    expect(u.parse("(" + text + ")", options)).toEqual(expected);
+  }
 });
