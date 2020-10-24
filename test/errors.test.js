@@ -74,6 +74,13 @@ test.each([
   ["((a:b)", { impliedObject: {} }],
   ["(&b)", { wwwFormUrlEncoded: true }],
   ["'a&b'", { wwwFormUrlEncoded: true }],
+  [
+    "a&c=d",
+    {
+      impliedObject: {},
+      wwwFormUrlEncoded: true,
+    },
+  ],
 ])("JsonURL.parse(%p, %p)", (text, options) => {
   const u = new JsonURL();
 
