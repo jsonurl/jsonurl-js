@@ -131,7 +131,7 @@ function optionsDefault(options, stringify = false) {
 }
 
 function parseDigitsLength(text, i, len) {
-  var ret = 0;
+  let ret = 0;
 
   for (; i < len; i++) {
     switch (text.charCodeAt(i)) {
@@ -155,7 +155,7 @@ function parseDigitsLength(text, i, len) {
 }
 
 function parseExponentLength(text, i, len) {
-  var ret = 0;
+  let ret = 0;
 
   switch (text.charCodeAt(i)) {
     case CHAR_E:
@@ -189,7 +189,7 @@ function parseExponentLength(text, i, len) {
 }
 
 function parseFractionLength(text, i, len) {
-  var c = text.charCodeAt(i);
+  const c = text.charCodeAt(i);
   if (c !== CHAR_DOT) {
     return 0;
   }
@@ -206,7 +206,7 @@ function parseFractionLength(text, i, len) {
 }
 
 function parseIntegerLength(text, i, len) {
-  var c = text.charCodeAt(i);
+  const c = text.charCodeAt(i);
   if (c === CHAR_0) {
     return 1;
   }
@@ -237,7 +237,7 @@ function errorMessage(msg, pos) {
 }
 
 function parseLiteralLength(text, i, end, errmsg) {
-  var isQuote = false;
+  let isQuote = false;
 
   if (i === end) {
     if (errmsg) {
@@ -252,7 +252,7 @@ function parseLiteralLength(text, i, end, errmsg) {
   }
 
   for (; i < end; i++) {
-    var c = text.charCodeAt(i);
+    const c = text.charCodeAt(i);
     if (c >= 0x41 && c <= 0x5a) {
       // A-Z
       continue;
@@ -479,7 +479,7 @@ function toJsonURLText_String(options, depth, isKey) {
 }
 
 function toJsonURLText_Array(options = {}, depth = 0) {
-  var ret = undefined;
+  let ret = undefined;
 
   this.forEach(function (e) {
     if (typeof e === "function") {
@@ -522,9 +522,9 @@ function toJsonURLText_Array(options = {}, depth = 0) {
 }
 
 function toJsonURLText_Object(options = {}, depth = 0) {
-  var ret = undefined;
-  var keys = Object.keys(this);
-  var obj = this;
+  let ret = undefined;
+  const keys = Object.keys(this);
+  const obj = this;
 
   keys.forEach(function (k) {
     if (k === undefined || k === null) {
@@ -534,7 +534,7 @@ function toJsonURLText_Object(options = {}, depth = 0) {
       return;
     }
 
-    var v = obj[k];
+    let v = obj[k];
 
     if (typeof v === "function") {
       if (!options.callFunctions) {
@@ -802,10 +802,10 @@ class JsonURL {
       return litval;
     }
 
-    var isQuotedString = false;
-    var isNumIndex = pos;
+    let isQuotedString = false;
+    let isNumIndex = pos;
 
-    var c = text.charCodeAt(pos);
+    const c = text.charCodeAt(pos);
     switch (c) {
       case CHAR_DASH:
         isNumIndex++;
@@ -829,7 +829,7 @@ class JsonURL {
           //
           // this literal is a number
           //
-          var s = text.substring(pos, end);
+          const s = text.substring(pos, end);
           return forceString ? s : Number(s);
         }
       }
