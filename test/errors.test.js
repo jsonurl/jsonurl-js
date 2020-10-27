@@ -72,7 +72,7 @@ test.each([
   ["1,2)", { impliedArray: [] }],
   ["a:b)", { impliedObject: {} }],
   ["((a:b)", { impliedObject: {} }],
-  ["(&b)", { wwwFormUrlEncoded: true }],
+  ["(,b)", undefined],
   ["'a&b'", { wwwFormUrlEncoded: true }],
   [
     "a&c=d",

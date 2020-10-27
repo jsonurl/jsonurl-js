@@ -24,6 +24,9 @@
 
 import JsonURL from "../src/JsonURL.js";
 
+//
+// these cases should work for both implied and non-implied values.
+//
 test.each([
   ["1&2", { impliedArray: [] }, [1, 2]],
   ["1&2&3", { impliedArray: [] }, [1, 2, 3]],
@@ -103,4 +106,49 @@ test.each([
   if (options.getMissingValue === undefined) {
     expect(u.parse("(" + text + ")", options)).toEqual(expected);
   }
+});
+
+//
+// these cases should work only for implied.
+//
+test.each([
+  ["&a", { impliedArray: [] }, ["a"]],
+  ["a&", { impliedArray: [] }, ["a"]],
+  ["&1&2", { impliedArray: [] }, [1, 2]],
+  ["1&()&", { impliedArray: [] }, [1, {}]],
+  ["a&(1)&", { impliedArray: [] }, ["a", [1]]],
+  ["1&&2", { impliedArray: [] }, [1, 2]],
+  ["&a:true", { impliedObject: {} }, { a: true }],
+  ["a:()&", { impliedObject: {} }, { a: {} }],
+  ["a&(1,2)&", { impliedArray: [] }, ["a", [1, 2]]],
+  ["a=b&&c:d", { impliedObject: {} }, { a: "b", c: "d" }],
+  ["a&(a:b)&", { impliedArray: [] }, ["a", { a: "b" }]],
+  [
+    "a&&c=d",
+    { impliedObject: {}, getMissingValue: (k) => (k === "a" && true) || false },
+    { a: true, c: "d" },
+  ],
+])("JsonURL.parse(%p, %p)", (text, options, expected) => {
+  const u = new JsonURL();
+
+  //
+  // options.wwwFormUrlEncoded = false, so these should all fail.
+  //
+  expect(() => {
+    u.parse(text, options);
+  }).toThrow(SyntaxError);
+
+  options.wwwFormUrlEncoded = true;
+
+  if (options.impliedArray) {
+    options.impliedArray = [];
+  }
+  if (options.impliedObject) {
+    options.impliedObject = {};
+  }
+
+  //
+  // options.wwwFormUrlEncoded = true, so this should succeed.
+  //
+  expect(u.parse(text, options)).toEqual(expected);
 });
