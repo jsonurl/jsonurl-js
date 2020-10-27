@@ -365,6 +365,29 @@ function parseTrueFalseNull(text, pos, end, forceString, parser) {
   return undefined;
 }
 
+function parseSkipAmps(text, off, end) {
+  if (off === end || text.charCodeAt(off) !== CHAR_AMP) {
+    // nothing to skip
+    return off;
+  }
+
+  let pos;
+
+  for (pos = off; pos < end && text.charCodeAt(pos) === CHAR_AMP; pos++) {
+    // skip all consecutive amps
+  }
+
+  if (pos === end) {
+    // one or more amps followed by end-of-string
+    return end;
+  }
+
+  //
+  // return the position of the last amp before the next usable char
+  //
+  return pos - 1;
+}
+
 function encodeStringLiteral(text) {
   let ret = encodeURIComponent(text);
   ret = ret.replace(rx_encode_pctspace, "+");
@@ -942,6 +965,23 @@ class JsonURL {
       pos = 1;
     }
 
+    //
+    // when I'm effectively a replacement for URLSearchParams then I need to
+    // accept and skip extra ampersands.
+    //
+    let skipAmps =
+      options.wwwFormUrlEncoded &&
+      (options.impliedObject || options.impliedArray);
+
+    if (skipAmps) {
+      //
+      // ignore "extra" amps at the beginning of the string
+      //
+      while (pos < end && text.charCodeAt(pos) === CHAR_AMP) {
+        pos++;
+      }
+    }
+
     for (;;) {
       if (pos === end) {
         throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, pos));
@@ -986,14 +1026,19 @@ class JsonURL {
 
               valueStack.appendArrayValue(pos, newEmptyValue(this));
 
-              if (pos === end && stateStack.depth() === 0) {
-                if (options.impliedArray) {
-                  return valueStack.popArrayValue();
+              if (stateStack.depth() === 0) {
+                if (skipAmps) {
+                  pos = parseSkipAmps(text, pos, end);
                 }
-                if (options.impliedObject) {
-                  return valueStack.popObjectValue();
+                if (pos === end) {
+                  if (options.impliedArray) {
+                    return valueStack.popArrayValue();
+                  }
+                  if (options.impliedObject) {
+                    return valueStack.popObjectValue();
+                  }
+                  throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, pos));
                 }
-                throw new SyntaxError(errorMessage(ERR_MSG_STILLOPEN, pos));
               }
               continue;
 
@@ -1024,6 +1069,10 @@ class JsonURL {
               if (!options.wwwFormUrlEncoded || stateStack.depth() > 0) {
                 throw new SyntaxError(errorMessage(ERR_MSG_BADCHAR, pos));
               }
+            //
+            // not calling parseSkipAmps() here because I can't think of a
+            // use case that makes it necessary.
+            //
             // fall through
 
             case CHAR_COMMA:
@@ -1051,6 +1100,9 @@ class JsonURL {
                   throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
 
                 case 0:
+                  if (skipAmps) {
+                    pos = parseSkipAmps(text, pos, end);
+                  }
                   if (pos === end) {
                     if (options.impliedArray) {
                       return valueStack.popArrayValue();
@@ -1104,6 +1156,9 @@ class JsonURL {
           lv = this.parseLiteral(text, pos, lvpos, false, options);
           pos = lvpos;
 
+          if (skipAmps) {
+            pos = parseSkipAmps(text, pos, end);
+          }
           if (pos === end) {
             if (stateStack.depth() === 0 && options.impliedArray) {
               return valueStack.popArrayValue(lv);
@@ -1144,6 +1199,9 @@ class JsonURL {
                   throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
 
                 case 0:
+                  if (skipAmps) {
+                    pos = parseSkipAmps(text, pos, end);
+                  }
                   //
                   // end of an implied composite
                   //
@@ -1180,6 +1238,9 @@ class JsonURL {
           lv = this.parseLiteral(text, pos, lvpos, false, options);
           pos = lvpos;
 
+          if (skipAmps) {
+            pos = parseSkipAmps(text, pos, end);
+          }
           if (lvpos === end) {
             if (stateStack.depth() === 0 && options.impliedObject) {
               return valueStack.popObjectValue(lv);
@@ -1220,6 +1281,9 @@ class JsonURL {
                   throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
 
                 case 0:
+                  if (skipAmps) {
+                    pos = parseSkipAmps(text, pos, end);
+                  }
                   //
                   // end of an implied composite
                   //
@@ -1248,6 +1312,10 @@ class JsonURL {
           lvpos = parseLiteralLength(text, pos, end, ERR_MSG_EXPECT_LITERAL);
           lv = this.parseLiteral(text, pos, lvpos, true, options);
           pos = lvpos;
+
+          if (skipAmps) {
+            pos = parseSkipAmps(text, pos, end);
+          }
 
           if (lvpos === end) {
             if (options.impliedObject && stateStack.depth() == 0) {
