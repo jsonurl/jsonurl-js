@@ -38,6 +38,15 @@ test("JsonURL.stringify(null, impliedStringLiterals)", () => {
   }).toThrow(SyntaxError);
 });
 
+test("JsonURL.stringify(null, coerce+impliedString)", () => {
+  expect(
+    JsonURL.stringify(null, {
+      coerceNullToEmptyString: true,
+      impliedStringLiterals: true,
+    })
+  ).toBe("");
+});
+
 test("JsonURL.stringify('', impliedStringLiterals)", () => {
   expect(() => {
     JsonURL.stringify("", {
@@ -50,6 +59,8 @@ test("JsonURL.stringify('', impliedStringLiterals)", () => {
 test.each([
   [true, "true", "true"],
   [false, "false", "false"],
+  [{}, "()", "()"],
+  [[], "()", "()"],
   ["true", "'true'", "true"],
   ["false", "'false'", "false"],
   ["null", "'null'", "null"],
