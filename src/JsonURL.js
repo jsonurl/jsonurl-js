@@ -214,7 +214,10 @@ function parseIntegerLength(text, i, len) {
   return parseDigitsLength(text, i, len);
 }
 
-function newEmptyValue(p) {
+function newEmptyValue(p, options) {
+  if (options.noEmptyComposite) {
+    return [];
+  }
   if (typeof p.emptyValue === "function") {
     return p.emptyValue();
   }
@@ -600,6 +603,9 @@ function toJsonURLText_Object(options = {}, depth = 0) {
   });
 
   if (!options.isImplied || depth > 0) {
+    if (options.noEmptyComposite && ret === undefined) {
+      ret = ":";
+    }
     return ret === undefined ? "()" : "(" + ret + ")";
   }
 
@@ -898,6 +904,11 @@ class JsonURL {
    * than back-to-back single quotes.
    * @param {boolean} options.coerceNullToEmptyString Replace
    * instances of the null value with an empty string.
+   * @param {boolean} options.noEmptyComposite Distinguish
+   * between empty array and empty object. Empty array is back-to-back parens,
+   * e.g. (). Empty object is two parens with a single colon inside, e.g. (:).
+   * Note that this prevents the parser from recognizing (:) as an object
+   * with a single member whose key and value is the unquoted empty string.
    * @param {function} options.getMissingValue Provides a value for a
    * missing, top-level value.
    * @throws SyntaxError if there is a syntax error in the given text
@@ -990,9 +1001,11 @@ class JsonURL {
       let c = text.charCodeAt(pos);
 
       //
-      // literal value and literal value position
+      // literal value
+      // literal value position
+      // empty object bool
       //
-      let lv, lvpos;
+      let lv, lvpos, isEmptyObject;
 
       switch (stateStack[stateStack.depth()]) {
         case STATE_PAREN:
@@ -1019,12 +1032,12 @@ class JsonURL {
 
               if (stateStack.depth(true) === -1) {
                 if (pos === end) {
-                  return newEmptyValue(this);
+                  return newEmptyValue(this, options);
                 }
                 throw new SyntaxError(errorMessage(ERR_MSG_EXTRACHARS, pos));
               }
 
-              valueStack.appendArrayValue(pos, newEmptyValue(this));
+              valueStack.appendArrayValue(pos, newEmptyValue(this, options));
 
               if (stateStack.depth() === 0) {
                 if (skipAmps) {
@@ -1056,12 +1069,35 @@ class JsonURL {
           }
 
           //
-          // run the limit check before parsing the literal
+          // run the limit check
           //
           valueStack.checkValueLimit(pos);
 
+          isEmptyObject =
+            options.noEmptyComposite &&
+            pos == lvpos &&
+            pos + 2 <= end &&
+            text.charCodeAt(lvpos) == CHAR_COLON &&
+            text.charCodeAt(lvpos + 1) == CHAR_PAREN_CLOSE;
+
+          if (isEmptyObject) {
+            // skip the colon so that we hit the close paren case in the
+            // switch below
+            lvpos++;
+          }
+
+          //
+          // char immediately following the literal
+          //
           c = text.charCodeAt(lvpos);
-          lv = this.parseLiteral(text, pos, lvpos, c === CHAR_COLON, options);
+
+          if (!isEmptyObject) {
+            //
+            // parse as a literal if it's a literal
+            //
+            lv = this.parseLiteral(text, pos, lvpos, c === CHAR_COLON, options);
+          }
+
           pos = lvpos;
 
           switch (c) {
@@ -1087,10 +1123,14 @@ class JsonURL {
             case CHAR_PAREN_CLOSE:
               pos++;
 
-              //
-              // single element array
-              //
-              valueStack.appendArrayValue(pos, [lv]);
+              if (isEmptyObject) {
+                valueStack.push({});
+              } else {
+                //
+                // single element array
+                //
+                valueStack.appendArrayValue(pos, [lv]);
+              }
 
               switch (stateStack.depth(true)) {
                 case -1:
@@ -1404,6 +1444,9 @@ class JsonURL {
    * bac-to-back single quotes.
    * @param {boolean} options.coerceNullToEmptyString Replace instances
    * of the null value with an empty string.
+   * @param {boolean} options.noEmptyComposite Distinguish
+   * between empty array and empty object. Empty array is back-to-back parens,
+   * e.g. (). Empty object is two parens with a single colon inside, e.g. (:).
    * @returns {string} JSON->URL text, or undefined if the given value
    * is undefined.
    */
