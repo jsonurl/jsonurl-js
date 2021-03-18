@@ -32,11 +32,11 @@
   },
   "homepage": "https://www.jsonurl.org/",
   "dependencies": {
-    "@babel/runtime": "^7.13.6"
+    "@babel/runtime": "^7.13.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.0",
-    "@babel/plugin-transform-runtime": "^7.13.6",
+    "@babel/plugin-transform-runtime": "^7.13.7",
     "@babel/preset-env": "^7.13.5",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^15.1.0",
