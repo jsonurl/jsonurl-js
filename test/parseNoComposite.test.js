@@ -67,14 +67,12 @@ test.each([
   ["()", { noEmptyComposite: true, impliedArray: [] }, [[]]],
   ["(:),()", { noEmptyComposite: true, impliedArray: [] }, [{}, []]],
   ["(),(:)", { noEmptyComposite: true, impliedArray: [] }, [[], {}]],
-])("JsonURL.parse(%s)", (text, options, expected) => {
-  const parseOptions = JSON.parse(JSON.stringify(options));
-  const actual = u.parse(text, parseOptions);
+])("JsonURL.parse(%s, %s)", (text, options, expected) => {
+  const actual = u.parse(text, options);
   expect(actual).toEqual(expected);
 
-  let stringifyOptions = JSON.parse(JSON.stringify(options));
   if (options.impliedArray || options.impliedObject) {
-    stringifyOptions.isImplied = true;
+    options.isImplied = true;
   }
-  expect(JsonURL.stringify(actual, stringifyOptions)).toEqual(text);
+  expect(JsonURL.stringify(actual, options)).toEqual(text);
 });

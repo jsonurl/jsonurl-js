@@ -24,6 +24,15 @@
 
 import JsonURL from "../src/JsonURL.js";
 
+function resetOptions(options, implied = true) {
+  if (options.impliedArray) {
+    options.impliedArray = implied ? [] : undefined;
+  }
+  if (options.impliedObject) {
+    options.impliedObject = implied ? {} : undefined;
+  }
+}
+
 //
 // these cases should work for both implied and non-implied values.
 //
@@ -78,31 +87,26 @@ test.each([
     u.parse(text, options);
   }).toThrow(SyntaxError);
 
-  options.wwwFormUrlEncoded = true;
-
-  if (options.impliedArray) {
-    options.impliedArray = [];
-  }
-  if (options.impliedObject) {
-    options.impliedObject = {};
-  }
-
   //
   // options.wwwFormUrlEncoded = true, so this should succeed.
   //
+  options.wwwFormUrlEncoded = true;
+  resetOptions(options);
   expect(u.parse(text, options)).toEqual(expected);
 
-  if (options.impliedArray) {
-    options.impliedArray = undefined;
-  }
-  if (options.impliedObject) {
-    options.impliedObject = undefined;
-  }
+  //
+  // options.AQF = true
+  //
+  options.AQF = true;
+  resetOptions(options);
+  expect(u.parse(text, options)).toEqual(expected);
 
   //
   // options.wwwFormUrlEncoded = true still, just removing the
   // implied value.
   //
+  options.AQF = undefined;
+  resetOptions(options, false);
   if (options.getMissingValue === undefined) {
     expect(u.parse("(" + text + ")", options)).toEqual(expected);
   }

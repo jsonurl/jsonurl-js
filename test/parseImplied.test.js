@@ -26,6 +26,12 @@ import JsonURL from "../src/JsonURL.js";
 
 const u = new JsonURL();
 
+function parseAQF(text, options) {
+  const myOptions = JSON.parse(JSON.stringify(options));
+  myOptions.AQF = true;
+  return u.parse(text, myOptions);
+}
+
 test.each([
   ["", { impliedArray: [], _impliedOnly: false }, []],
   ["()", { impliedArray: [], _impliedOnly: false }, [{}]],
@@ -51,7 +57,8 @@ test.each([
   if (options._impliedOnly !== false) {
     expect(() => {
       u.parse(text);
+      u.parse(text, { AQF: true });
     }).toThrow(SyntaxError);
   }
-  expect(u.parse(text, options)).toEqual(expected);
+  expect(parseAQF(text, options)).toEqual(expected);
 });
