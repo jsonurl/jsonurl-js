@@ -26,6 +26,9 @@ import JsonURL from "../src/JsonURL.js";
 
 const u = new JsonURL();
 
+//
+// these work with both the base and AQF syntax
+//
 test.each([
   ["()", u.emptyValue],
   [
@@ -53,24 +56,35 @@ test.each([
   ["(null,null)", ["null", "null"]],
   ["(a:b,c:d,e:f)", { a: "b", c: "d", e: "f" }],
   ["1e%2B1", "1e+1"],
-  ["'Hello,+(World)!'", "'Hello, (World)!'"],
   ["Bob's+house", "Bob's house"],
-  ["('Hello,+(World)!')", ["'Hello, (World)!'"]],
   ["('','')", ["''", "''"]],
   ["('qkey':g)", { "'qkey'": "g" }],
 ])("JsonURL.parse(%s)", (text, expected) => {
   expect(u.parse(text, { impliedStringLiterals: true })).toEqual(expected);
 
-  //
-  // verify that stringify returns the same content as the
-  // original text.
-  //
-  // expect(JsonURL.stringify(expected)).toBe(
-  //   text
-  //     .replace("3e1", "30")
-  //     .replace("2.0", "2")
-  //     .replace("4e-2", "0.04")
-  //     .replace("5e+0", "5")
-  //     .replace("'qkey'", "qkey")
-  // );
+  expect(u.parse(text, { AQF: true, impliedStringLiterals: true })).toEqual(
+    expected
+  );
+});
+
+//
+// these tests are specific to the base syntax
+//
+test.each([
+  ["'Hello,+(World)!'", "'Hello, (World)!'"],
+  ["('Hello,+(World)!')", ["'Hello, (World)!'"]],
+])("JsonURL.parse(%s)", (text, expected) => {
+  expect(u.parse(text, { impliedStringLiterals: true })).toEqual(expected);
+});
+
+//
+// these tests are specific to the AQF syntax
+//
+test.each([
+  ["'Hello!,+!(World!)!!'", "'Hello, (World)!'"],
+  ["('Hello!,+!(World!)!!')", ["'Hello, (World)!'"]],
+])("JsonURL.parse(%s)", (text, expected) => {
+  expect(u.parse(text, { AQF: true, impliedStringLiterals: true })).toEqual(
+    expected
+  );
 });

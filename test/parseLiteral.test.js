@@ -34,8 +34,19 @@ function encodedString(s) {
     .replace(/:/, "%3A");
 }
 
+function escapeStringAQF(s) {
+  return s
+    .replace(/ /, "+")
+    .replace(/!/, "!!")
+    .replace(/\(/, "!(")
+    .replace(/\)/, "!)")
+    .replace(/,/, "!,")
+    .replace(/:/, "!:");
+}
+
 function runTest(text, value, keyValue, strLitValue) {
   expect(u.parseLiteral(text)).toBe(value);
+  expect(JsonURL.parse(text)).toBe(value);
   expect(u.parseLiteral(text, 0, text.length, true)).toBe(keyValue);
   expect(
     u.parseLiteral(text, 0, text.length, true, { impliedStringLiterals: true })
@@ -46,10 +57,18 @@ function runTest(text, value, keyValue, strLitValue) {
   // expected for literals).
   //
   expect(u.parse(text)).toBe(value);
+  expect(JsonURL.parse(text)).toBe(value);
+}
+
+function runTestAQF(text, value, strLitValue) {
+  expect(u.parse(text, { AQF: true })).toBe(value);
+  expect(u.parse(text, { AQF: true, impliedStringLiterals: true })).toBe(
+    strLitValue
+  );
 }
 
 //
-// JsonURL.parseLiteral tests
+// instance used for JsonURL.parseLiteral tests
 //
 const u = new JsonURL();
 
@@ -112,46 +131,54 @@ test.each([
   "-.",
   "1.2.3",
   "hello, world",
+  "Hello (world).",
   "Bob's House",
   "Hello, World!",
   "World: Hello!",
-  "Hello (world).",
 ])("JsonURL.parseLiteral(%p)", (value) => {
   let keyValue = String(value);
   let text = typeof value === "string" ? encodedString(keyValue) : keyValue;
   runTest(text, value, keyValue, keyValue);
+
+  let textAQF =
+    typeof value === "string" ? escapeStringAQF(keyValue) : keyValue;
+  runTestAQF(textAQF, value, keyValue);
 });
 
 test.each([
   //
   // fixed point
   //
-  ["-3e0", -3, "-3e0"],
-  ["1e+2", 1e2, "1e 2"],
-  ["-2e+1", -2e1, "-2e 1"],
+  ["-3e0", -3, undefined, "-3e0"],
+  ["1e+2", 1e2, undefined, "1e 2"],
+  ["-2e+1", -2e1, undefined, "-2e 1"],
 
   //
   // floating point
   //
-  ["156.911e+2", 156.911e2, "156.911e 2"],
+  ["156.911e+2", 156.911e2, undefined, "156.911e 2"],
 
   //
   // string
   //
   ["'hello'", "hello", "'hello'", undefined],
-  ["hello%2Bworld", "hello+world", undefined],
-  ["y+%3D+mx+%2B+b", "y = mx + b", undefined],
-  ["a%3Db%26c%3Dd", "a=b&c=d", undefined],
-  ["hello%F0%9F%8D%95world", "hello\uD83C\uDF55world", undefined],
-  ["-e+", "-e ", undefined],
-  ["-e+1", "-e 1", undefined],
-  ["1e%2B1", "1e+1", undefined],
-])("JsonURL.parseLiteral(%p)", (text, value, strLitValue) => {
+  ["hello%2Bworld", "hello+world", undefined, undefined],
+  ["y+%3D+mx+%2B+b", "y = mx + b", undefined, undefined],
+  ["a%3Db%26c%3Dd", "a=b&c=d", undefined, undefined],
+  ["hello%F0%9F%8D%95world", "hello\uD83C\uDF55world", undefined, undefined],
+  ["-e+", "-e ", undefined, undefined],
+  ["-e+1", "-e 1", undefined, undefined],
+  ["1e%2B1", "1e+1", 10, "1e+1"],
+])("JsonURL.parseLiteral(%p)", (text, value, aqfValue, strLitValue) => {
   let keyValue = typeof value === "string" ? value : text;
+  if (aqfValue === undefined) {
+    aqfValue = value;
+  }
   if (strLitValue === undefined) {
-    strLitValue = value;
+    strLitValue = aqfValue;
   }
   runTest(text, value, keyValue, strLitValue);
+  runTestAQF(text, aqfValue, strLitValue);
 });
 
 test("JsonURL.parseLiteral('null')", () => {

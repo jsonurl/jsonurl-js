@@ -13,7 +13,7 @@
     "build": "rollup -c",
     "test": "jest",
     "lint": "env DEBUG=eslint:cli-engine eslint .",
-    "jsdoc": "jsdoc -c jsdoc.config.js"
+    "jsdoc": "jsdoc -c jsdoc.config.js -a public"
   },
   "repository": {
     "type": "git",

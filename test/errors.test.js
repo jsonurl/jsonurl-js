@@ -23,6 +23,7 @@
 */
 
 import JsonURL from "../src/JsonURL.js";
+import { JsonURLParseOptions } from "../src/JsonURLParseOptions.js";
 
 test.each([
   "(",
@@ -56,7 +57,6 @@ test.each([
   "(a=b)",
   "'a=b'",
   "'a&b'",
-  "'hello",
   "(a:)",
   "(:a)",
   "(a,,c)",
@@ -66,6 +66,26 @@ test.each([
   expect(() => {
     u.parse(text);
   }).toThrow(SyntaxError);
+
+  expect(() => {
+    JsonURL.parse(text);
+  }).toThrow(SyntaxError);
+
+  expect(() => {
+    JsonURL.parse(text, { AQF: true });
+  }).toThrow(SyntaxError);
+});
+
+test.each(["%", "%2", "%2X"])("JsonURL.parse(%p)", (text) => {
+  const u = new JsonURL();
+
+  expect(() => {
+    u.parse(text);
+  }).toThrow(URIError);
+
+  expect(() => {
+    JsonURL.parse(text);
+  }).toThrow(URIError);
 });
 
 test.each([
@@ -81,6 +101,19 @@ test.each([
       wwwFormUrlEncoded: true,
     },
   ],
+  ["1%", { AQF: true }],
+  ["%4", { AQF: true }],
+  ["%4G", { AQF: true }],
+  ["!", { AQF: true }],
+  ["!.", { AQF: true }],
+  ["'hello", undefined],
+  ["(a=(b:2&c:3))", { wwwFormUrlEncoded: true }],
+  ["(((1&2)))", { wwwFormUrlEncoded: true }],
+  ["(((1=2)))", { wwwFormUrlEncoded: true }],
+  ["(((1,2,3&4)))", { wwwFormUrlEncoded: true }],
+  ["(((a:b,c=d)))", { wwwFormUrlEncoded: true }],
+  ["(((a:b,c&d)))", { wwwFormUrlEncoded: true }],
+  ["(&b)", { wwwFormUrlEncoded: true }],
 ])("JsonURL.parse(%p, %p)", (text, options) => {
   const u = new JsonURL();
 
@@ -90,23 +123,27 @@ test.each([
 });
 
 test.each(["((((1))))", "(1,2,3,4,5,6)", "(100000,100000,100000)"])(
-  "JsonURL.parse(%p)",
+  "JsonURL.parse(%p, with limits)",
   (text) => {
     //
     // Test Errors
     //
-    const u = new JsonURL({
+    const options = new JsonURLParseOptions({
       maxParseChars: 15,
       maxParseValues: 5,
       maxParseDepth: 2,
     });
 
     expect(() => {
-      u.parse(text);
+      new JsonURL().parse(text, options);
     }).toThrow(Error);
 
     expect(() => {
-      u.parse(text);
+      new JsonURL(options).parse(text);
+    }).toThrow(Error);
+
+    expect(() => {
+      JsonURL.parse(text, options);
     }).toThrow(/ exceeded(\s+at\s+position\s+\d+)?$/);
   }
 );
