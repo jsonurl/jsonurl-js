@@ -45,6 +45,7 @@ export const MSG_IMPLIED_STRING_EMPTY =
   "JSON->URL: the empty string is not allowed";
 export const MSG_BAD_ESCAPE = "JSON->URL: invalid escape sequence";
 export const MSG_BAD_PCTENC = "JSON->URL: invalid percent-encoded sequence";
+export const MSG_EXPECT_OBJVALUE = "JSON->URL: expected object value";
 
 export function fmt(msg, pos) {
   return pos === undefined ? msg : msg + " at position " + pos;
