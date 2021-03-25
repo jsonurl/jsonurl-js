@@ -9,6 +9,7 @@
   "module": "dist/jsonurl.esm.js",
   "browser": "dist/jsonurl.min.js",
   "moduleName": "JsonURL",
+  "types": "./jsonurl.d.ts",
   "scripts": {
     "build": "rollup -c",
     "test": "jest",
