@@ -49,8 +49,8 @@ import JsonURL from "@jsonurl/jsonurl";
 ### The JavaScript API
 Once included, the API is the same for all three.
 ```js
-let p = new JsonURL();
-let value = p.parse( "(Hello:World!)" );
+let value = JsonURL.parse( "(Hello:World!)" );
+let string = JsonURL.stringify( value );
 ```
 There are options available, but that's all you need to get started.
 
