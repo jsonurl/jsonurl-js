@@ -57,7 +57,7 @@ const babelExternal = [/@babel\/runtime/];
 
 export default [
   {
-    input: "src/JsonURL.js",
+    input: "src/index.js",
     output: [
       {
         name: pkg.moduleName,
@@ -68,7 +68,7 @@ export default [
     plugins: [resolve(), commonjs(), babel(babelBundle)],
   },
   {
-    input: "src/JsonURL.js",
+    input: "src/index.js",
     output: [
       {
         name: pkg.moduleName,
@@ -80,7 +80,7 @@ export default [
     plugins: [resolve(), commonjs(), babel(babelBundle), terser()],
   },
   {
-    input: "src/JsonURL.js",
+    input: "src/index.js",
     output: [
       {
         name: pkg.moduleName,
