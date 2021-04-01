@@ -1792,5 +1792,3 @@ export class JsonURL {
     return value.toJsonURLText(options, 0);
   }
 }
-
-export { JsonURL as default };
