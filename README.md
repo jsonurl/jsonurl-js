@@ -41,8 +41,8 @@ import JsonURL from "@jsonurl/jsonurl";
 ### Browser script tag
 ```html
 <script
-    src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.1.0"
-    integrity="sha384-JCtJokkM2P1NvInO8p82t17dv0kqMRWhrgLU+H8KIHlev5bM9hot93290mWx50u9"
+    src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.1.1"
+    integrity="sha384-xMsv7+kJwJbUEcGrJdOgvbffqJ1YWjUW+IV6a6vVyYhcPbJjBntEdTtX6LBNsYN8"
     crossorigin="anonymous"></script>
 ```
 
