@@ -41,6 +41,8 @@ jobs:
     - run: npm run lint
     - run: npm run build
     - run: npm test
+    - name: Integration Test
+      run: cd itest && ./itest.sh
     - name: Package artifacts
       uses: actions/upload-artifact@v2
       if: success()
@@ -50,7 +52,7 @@ jobs:
 
   matrix-build:
     needs: artifact
-    if: needs.artifact.result == 'success'
+    if: ${{ needs.artifact.result == 'success' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -75,12 +77,14 @@ jobs:
     - run: npm run lint
     - run: npm run build
     - run: npm test
+    - name: Integration Test
+      run: cd itest && ./itest.sh
 
   sonarcloud:
     needs: artifact
     if: |
-        needs.artifact.result == 'success'
-          && github.repository_owner == 'jsonurl'
+        ${{ needs.artifact.result == 'success'
+          && github.repository_owner == 'jsonurl' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

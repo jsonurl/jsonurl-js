@@ -1,0 +1,95 @@
+#!/bin/sh
+
+#
+# Node.js major version number
+#
+node_major=`node --version | sed -n 's/^v\([0-9][0-9]*\).*/\1/p'`
+
+#
+# run the integration test in the given directory
+#
+itest() {
+    test_dir="$1"
+    test_opt="$2"
+
+    (cd "$test_dir" && npm uninstall @jsonurl/jsonurl ; npm install ../../)
+    (cd "$test_dir" && npm ci && npm run build || exit 1) || return 1
+
+    if test -z "$test_exp"; then
+        (cd "$test_dir" && npm test || exit 1) || return 1
+    else
+        (cd "$test_dir" && env NODE_OPTIONS="$test_opt" npm test || exit 1) || return 1
+    fi
+
+    return 0
+}
+
+#
+# print the status for the given integration test
+#
+itest_status() {
+    test_dir=$1
+    test_status=$2
+
+    test_desc=`sed -n 's/\s*"description"\s*:\s*"\([^"]*\)".*/\1/p' "$test_dir/package.json"`
+
+    echo -n "$test_desc: "
+
+    if test -z "$test_status" ; then
+        echo Skipped
+    elif test $test_status -ne 0 ; then
+        echo Fail
+    else
+        echo Success
+    fi
+}
+
+itest_exit() {
+    test -z "$1" && return
+    test $1 -gt 0 && exit 1
+}
+
+##
+# MAIN
+##
+
+test_cjs_status=0
+itest cjs || test_cjs_status=1
+
+test_es6babel_status=0
+itest es6-babel || test_es6babel_status=1
+
+test_jsdom_status=0
+itest jsdom || test_jsdom_status=1
+
+#
+# This test depends on the version of node.
+#   node < 11  : no support for native ES6 modules
+#   node 11-12 : experimental support for native ES6 modules
+#   node 13+   : support for native ES6 modules enabled by default
+#
+if test "$node_major" -lt 11  ; then
+    test_es6native_status=
+    echo "ES6 native SKIPPED"
+elif test "$node_major" -lt 13  ; then
+    test_es6native_status=0
+    itest es6-native "--experimental-modules" || test_es6native_status=1
+else
+    test_es6native_status=0
+    itest es6-native || test_es6native_status=1
+fi
+
+echo
+echo "+---------+"
+echo "| Results |"
+echo "+---------+"
+itest_status cjs $test_cjs_status
+itest_status es6-babel $test_es6babel_status
+itest_status es6-native $test_es6native_status
+itest_status jsdom $test_jsdom_status
+
+itest_exit $test_cjs_status
+itest_exit $test_es6babel_status
+itest_exit $test_es6native_status
+itest_exit $test_jsdom_status
+
