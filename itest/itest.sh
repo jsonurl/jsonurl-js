@@ -45,8 +45,12 @@ itest_status() {
 }
 
 itest_exit() {
-    test -z "$1" && return
-    test $1 -gt 0 && exit 1
+    test_dir=$1
+    test_status=$2
+    test -z "$test_status" && return
+    test $test_status -eq 0 && return
+    echo "Error: $test_dir"
+    exit 1
 }
 
 ##
@@ -88,8 +92,10 @@ itest_status es6-babel $test_es6babel_status
 itest_status es6-native $test_es6native_status
 itest_status jsdom $test_jsdom_status
 
-itest_exit $test_cjs_status
-itest_exit $test_es6babel_status
-itest_exit $test_es6native_status
-itest_exit $test_jsdom_status
+itest_exit cjs $test_cjs_exit
+itest_exit es6-babel $test_es6babel_exit
+itest_exit es6-native $test_es6native_exit
+itest_exit jsdom $test_jsdom_exit
+
+exit 0
 
