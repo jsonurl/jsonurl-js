@@ -22,8 +22,6 @@
   SOFTWARE.
 */
 
-import commonjs from "@rollup/plugin-commonjs";
-import resolve from "@rollup/plugin-node-resolve";
 import babel from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
 import { eslint } from "rollup-plugin-eslint";
@@ -43,18 +41,6 @@ const babelBundle = {
   babelHelpers: "bundled",
 };
 
-const babelCJS = {
-  babelHelpers: "runtime",
-  plugins: ["@babel/plugin-transform-runtime"],
-};
-
-const babelESM = {
-  babelHelpers: "runtime",
-  plugins: [["@babel/plugin-transform-runtime", { useESModules: false }]],
-};
-
-const babelExternal = [/@babel\/runtime/];
-
 export default [
   {
     input: "src/index.js",
@@ -65,7 +51,7 @@ export default [
         format: "umd",
       },
     ],
-    plugins: [resolve(), commonjs(), babel(babelBundle)],
+    plugins: [eslint(), babel(babelBundle)],
   },
   {
     input: "src/index.js",
@@ -77,30 +63,22 @@ export default [
         banner: banner,
       },
     ],
-    plugins: [resolve(), commonjs(), babel(babelBundle), terser()],
+    plugins: [eslint(), babel(babelBundle), terser()],
   },
+  //
+  // this covers both ESM and CJS
+  // https://redfin.engineering/node-modules-at-war-why-commonjs-and-es-modules-cant-get-along-9617135eeca1
+  //
   {
     input: "src/index.js",
     output: [
       {
         name: pkg.moduleName,
-        file: pkg.module,
-        format: "esm",
-      },
-    ],
-    plugins: [eslint(), babel(babelESM)],
-    external: babelExternal,
-  },
-  {
-    input: "src/JsonURL.js",
-    output: [
-      {
-        name: pkg.moduleName,
         file: pkg.main,
         format: "cjs",
+        exports: "default",
       },
     ],
-    plugins: [eslint(), babel(babelCJS)],
-    external: babelExternal,
+    plugins: [eslint(), babel(babelBundle)],
   },
 ];
