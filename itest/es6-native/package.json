@@ -1,0 +1,25 @@
+{
+  "name": "@jsonurl/itest-es6-native",
+  "version": "0.0.0",
+  "private": true,
+  "description": "JSON->URL node native ES6 integration test",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "build": "",
+    "test": "node ./"
+  },
+  "author": "David MacCormack",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsonurl/jsonurl-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jsonurl/jsonurl-js/issues"
+  },
+  "homepage": "https://www.jsonurl.org/",
+  "dependencies": {
+    "@jsonurl/jsonurl": "file:../.."
+  }
+}
