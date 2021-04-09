@@ -57,6 +57,8 @@ itest_exit() {
 # MAIN
 ##
 
+cd `dirname $0`
+
 test_cjs_status=0
 itest cjs || test_cjs_status=1
 
