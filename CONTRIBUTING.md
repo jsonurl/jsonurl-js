@@ -26,7 +26,7 @@ Making and Submitting Changes
 I accept pull requests via GitHub. [Zulip][zulip] is
 the main channel of communication for contributors.  
 Here are some guidelines which will make applying PRs easier for me:
-+ Create a topic/feature branch from the `master` branch to base your work, and
++ Create a topic/feature branch from the `main` branch to base your work, and
   push your changes to a topic branch in your fork of the repository
 + Make commits of logical units and with [meaningful][commit-message-howto],
   [semantic][semantic-commit-message] messages that reference the related
