@@ -1,7 +1,7 @@
 # JSON&#x2192;URL
 [![License: MIT](https://img.shields.io/github/license/jsonurl/jsonurl-js.svg?label=License)][license]
 [![NPM version](https://img.shields.io/npm/v/@jsonurl/jsonurl.svg)](https://www.npmjs.com/package/@jsonurl/jsonurl)
-![CI](https://github.com/jsonurl/jsonurl-js/workflows/ci/badge.svg?branch=main)
+[![CI](https://github.com/jsonurl/jsonurl-js/workflows/ci/badge.svg?branch=main)](https://github.com/jsonurl/jsonurl-js/actions/workflows/ci.yml)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=alert_status)](https://sonarcloud.io/dashboard?id=jsonurl-js)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=coverage)](https://sonarcloud.io/dashboard?id=jsonurl-js)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=jsonurl-js&metric=ncloc)](https://sonarcloud.io/dashboard?id=jsonurl-js)
