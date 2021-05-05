@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-identical-title */
 /*
   MIT License
 
@@ -108,6 +109,7 @@ test.each([
   options.AQF = undefined;
   resetOptions(options, false);
   if (options.getMissingValue === undefined) {
+    // eslint-disable-next-line jest/no-conditional-expect
     expect(u.parse("(" + text + ")", options)).toEqual(expected);
   }
 });

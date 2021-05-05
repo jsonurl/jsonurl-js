@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-identical-title */
 /*
   MIT License
 
@@ -138,7 +139,7 @@ test.each([
     { coerceNullToEmptyString: true },
     { a: "", null: "d", e: "f" },
   ],
-])("JsonURL.parse(%s)", (text, options, expected) => {
+])("JsonURL.parse(%s,%p)", (text, options, expected) => {
   expect(u.parse(text, options)).toEqual(expected);
   expect(parseAQF(text, options)).toEqual(expected);
 });
@@ -160,7 +161,7 @@ test.each(["null", null])("JsonURL.parse(%p)", (text) => {
 
 test.each([
   ["%40%41%42%43%44%45%46%47%48%49%4A%4B%4C%4D%4E%4F", "@ABCDEFGHIJKLMNO"],
-])("JsonURL.parse(%p)", (text, expected) => {
+])("JsonURL.parse(percent encoding, %p)", (text, expected) => {
   expect(u.parse(text)).toBe(expected);
   expect(JsonURL.parse(text)).toBe(expected);
   expect(u.parse(text, { AQF: true })).toBe(expected);

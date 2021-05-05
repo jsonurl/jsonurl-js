@@ -54,11 +54,13 @@ test.each([
     { a: { b: { c: ["d"] } }, e: "f" },
   ],
 ])("JsonURL.parse(%p, %p)", (text, options, expected) => {
-  if (options._impliedOnly !== false) {
-    expect(() => {
-      u.parse(text);
-      u.parse(text, { AQF: true });
-    }).toThrow(SyntaxError);
-  }
+  expect(() => {
+    if (options._impliedOnly === false) {
+      throw SyntaxError("impliedOnly");
+    }
+    u.parse(text);
+    u.parse(text, { AQF: true });
+  }).toThrow(SyntaxError);
+
   expect(parseAQF(text, options)).toEqual(expected);
 });
