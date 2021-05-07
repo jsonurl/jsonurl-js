@@ -496,16 +496,16 @@ class Parser {
    */
   structChar(parenOnly = false) {
     if (this.options.wwwFormUrlEncoded) {
-      const c = this.text.charCodeAt(this.pos);
+      const chr = this.text.charCodeAt(this.pos);
 
-      switch (c) {
+      switch (chr) {
         case CHAR_AMP:
         case CHAR_EQUALS:
           if (parenOnly) {
             return undefined;
           }
           this.pos++;
-          return c;
+          return chr;
         default:
           break;
       }
@@ -1033,9 +1033,9 @@ class ParserAQF extends Parser {
     return ret.replace(RX_AQF_DECODE, function name(match, _p, offset) {
       if (match.length === 2) {
         const c = match.charCodeAt(1);
-        const ret = UNESCAPE[c];
-        if (ret !== undefined) {
-          return ret;
+        const uc = UNESCAPE[c];
+        if (uc !== undefined) {
+          return uc;
         }
       }
       throw new SyntaxError(Err.fmt(Err.MSG_BAD_ESCAPE, pos + offset));
@@ -1273,8 +1273,6 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
     if (chars.done()) {
       throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, chars.pos));
     }
-
-    //let c = chars.structChar(true);
 
     //
     // literal value
@@ -1560,7 +1558,6 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
               case 0:
                 if (skipAmps) {
                   chars.skipAmps();
-                  // pos = parseSkipAmps(text, pos, end);
                 }
                 //
                 // end of an implied composite
