@@ -63,6 +63,8 @@ test.each([
   ["(null,null)", [null, null]],
   ["(a:b,c:d,e:f)", { a: "b", c: "d", e: "f" }],
   ["Bob's+house", "Bob's house"],
+  ["(%26true)", ["&true"]],
+  ["((%26true))", [["&true"]]],
 ])("JsonURL.parse(%s)", (text, expected) => {
   expect(u.parse(text)).toEqual(expected);
   expect(JsonURL.parse(text)).toEqual(expected);
