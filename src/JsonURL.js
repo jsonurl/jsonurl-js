@@ -38,9 +38,11 @@ const RX_AQF_DECODE = /(![\s\S]?)/g;
 // patterns for use with RegEx.test().
 // DO NOT PUT //g ON THESE!!!
 //
-const RX_ENCODE_STRING_SAFE = /^[-A-Za-z0-9._~!$*;=@?/ ][-A-Za-z0-9._~!$*;=@?/' ]*$/;
+const RX_ENCODE_STRING_SAFE =
+  /^[-A-Za-z0-9._~!$*;=@?/ ][-A-Za-z0-9._~!$*;=@?/' ]*$/;
 const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;=@?/(),: ]+$/;
-const RX_ENCODE_QUOTED_LITERAL = /^(?:true|false|null|(?:[-]?[0-9]+(?:[.][0-9]+)?(?:[eE][-+]?[0-9]+)?))$/;
+const RX_ENCODE_QUOTED_LITERAL =
+  /^(?:true|false|null|(?:[-]?[0-9]+(?:[.][0-9]+)?(?:[eE][-+]?[0-9]+)?))$/;
 
 const RX_ENCODE_BASE = /[(),:]|%2[04]|%3B/gi;
 const RX_ENCODE_BASE_MAP = {
