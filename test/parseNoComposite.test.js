@@ -29,6 +29,7 @@ const u = new JsonURL();
 test.each([
   ["()", { noEmptyComposite: true }, []],
   ["(:)", { noEmptyComposite: true }, {}],
+  ["%28%3a%29", { noEmptyComposite: true, AQF: true }, {}],
   ["('':'')", { noEmptyComposite: true }, { "": "" }],
   [
     "('':)",
@@ -73,6 +74,9 @@ test.each([
 
   if (options.impliedArray || options.impliedObject) {
     options.isImplied = true;
+  }
+  if (options.AQF) {
+    text = decodeURIComponent(text);
   }
   expect(JsonURL.stringify(actual, options)).toEqual(text);
 });
