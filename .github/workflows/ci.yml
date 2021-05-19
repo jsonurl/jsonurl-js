@@ -24,10 +24,10 @@ jobs:
     - name: Set artifact version
       run: script/version_snapshot.sh
       shell: bash
-    - name: Use Node.js 12.x
-      uses: actions/setup-node@v1
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v2
       with:
-        node-version: 12.x
+        node-version: 16.x
     - name: Cache Node.js modules
       timeout-minutes: 10
       uses: actions/cache@v1
@@ -57,11 +57,11 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        node-version: [10.x, 12.x, 14.x]
+        node-version: [10.x, 12.x, 14.x, 16.x]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Node.js  ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
     - name: Cache Node.js modules
@@ -93,10 +93,10 @@ jobs:
     - name: Set artifact version
       run: script/version_snapshot.sh
       shell: bash
-    - name: Use Node.js 12.x
-      uses: actions/setup-node@v1
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v2
       with:
-        node-version: 12.x
+        node-version: 16.x
     - name: Cache Node.js modules
       timeout-minutes: 10
       uses: actions/cache@v1
