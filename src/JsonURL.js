@@ -271,7 +271,10 @@ function toJsonURLText_String(options, depth, isKey) {
       return this;
     }
     if (options.AQF) {
-      return "!" + this;
+      if (this.indexOf("+") == -1) {
+        return "!" + this;
+      }
+      return this.replace("+", "!+");
     }
     if (this.indexOf("+") == -1) {
       return "'" + this + "'";
