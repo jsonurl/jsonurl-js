@@ -83,7 +83,7 @@ test.each([
   ["-4", "'-4'", "-4", "!-4"],
   ["5a", undefined, undefined, undefined],
   ["'1+2'", "%271%2B2'", "'1%2B2'", undefined],
-  ["1e+1", "1e%2B1", undefined, "!1e+1"],
+  ["1e+1", "1e%2B1", undefined, "1e!+1"],
   ["a b c", "a+b+c", undefined, undefined],
   ["a,b", "'a,b'", "a%2Cb", "a!,b"],
   ["a,b c", "'a,b+c'", "a%2Cb+c", "a!,b+c"],
