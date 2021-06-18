@@ -49,16 +49,19 @@ import JsonURL from "@jsonurl/jsonurl";
 
 ### The JavaScript API
 Once included, the API is the same for all three.
+
+[![RunKit: Hello, World!](https://img.shields.io/badge/RunKit-Hello%2C%20World!-ff69b4)][runkit1]
 ```js
 let value = JsonURL.parse( "(Hello:World!)" );
 let string = JsonURL.stringify( value );
 ```
 
-If you intend to use JSON&#x2192;URL inside a browser then you'll want to
+If you intend to use JSON&#x2192;URL inside a browser's address bar then you'll want to
 enable the AQF (address bar query string friendly) syntax.
-```js
-let value = JsonURL.parse( "(Hello:World!!)",  { AQF: true });
 
+[![RunKit: Hello, Browser Address Bar!](https://img.shields.io/badge/RunKit-Hello%2C%20Address%20Bar!-ff69b4)][runkit2]
+```js
+let value = JsonURL.parse( "(Hello:Address Bar!!)",  { AQF: true });
 let string = JsonURL.stringify( value,  { AQF: true } );
 ```
 
@@ -76,6 +79,8 @@ set by default.
 [RFC3986]: https://tools.ietf.org/html/rfc3986
 [RFC1738]: https://tools.ietf.org/html/rfc1738
 [license]: https://opensource.org/licenses/MIT
+[runkit1]: https://runkit.com/jsonurl/hello-world
+[runkit2]: https://runkit.com/jsonurl/hello-aqf
 
 
 ## License
