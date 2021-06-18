@@ -53,14 +53,23 @@ Once included, the API is the same for all three.
 let value = JsonURL.parse( "(Hello:World!)" );
 let string = JsonURL.stringify( value );
 ```
-There are options available, but that's all you need to get started.
+
+If you intend to use JSON&#x2192;URL inside a browser then you'll want to
+enable the AQF (address bar query string friendly) syntax.
+```js
+let value = JsonURL.parse( "(Hello:World!!)",  { AQF: true });
+
+let string = JsonURL.stringify( value,  { AQF: true } );
+```
+
+There are additional options available, but that's all you need to get started.
 
 JSON&#x2192;URL has no runtime dependencies.
 
 ## Security
 The parser is designed to parse untrusted input. It supports limits on
 the number of parsed values and depth of nested arrays or objects.
-When the limit is exceeded an Error is thrown, and sane limit values are
+When the limit is exceeded an Error is thrown, and reasonable limit values are
 set by default.
 
 [RFC8259]: https://tools.ietf.org/html/rfc8259
