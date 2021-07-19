@@ -1110,12 +1110,17 @@ class ValueStack extends Array {
    * Pop an object key/value off the stack and assign the value in a target.
    * @returns the target
    */
-  popObjectValue(value) {
+  popObjectValue(options, value) {
     value = value || this.pop();
     let key = this.pop();
     let target = this[this.length - 1];
 
-    target[key] = value;
+    if (
+      value !== null ||
+      !options.isPresentAndTrue("ignoreNullObjectMembers")
+    ) {
+      target[key] = value;
+    }
 
     return target;
   }
@@ -1124,11 +1129,13 @@ class ValueStack extends Array {
    * Pop a value off the stack and append it to a target.
    * @returns the target
    */
-  popArrayValue(value) {
+  popArrayValue(options, value) {
     value = value || this.pop();
     let target = this[this.length - 1];
 
-    target.push(value);
+    if (value !== null || !options.isPresentAndTrue("ignoreNullArrayMembers")) {
+      target.push(value);
+    }
 
     return target;
   }
@@ -1321,10 +1328,10 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
               }
               if (chars.done()) {
                 if (options.impliedArray) {
-                  return valueStack.popArrayValue();
+                  return valueStack.popArrayValue(options);
                 }
                 if (options.impliedObject) {
-                  return valueStack.popObjectValue();
+                  return valueStack.popObjectValue(options);
                 }
                 throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, chars.pos));
               }
@@ -1372,7 +1379,7 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
             stateStack.replace(STATE_IN_ARRAY);
             valueStack.appendArrayValue(errpos, []);
             valueStack.push(lv);
-            valueStack.popArrayValue();
+            valueStack.popArrayValue(options);
             continue;
 
           case CHAR_PAREN_CLOSE:
@@ -1398,10 +1405,10 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
                 }
                 if (chars.done()) {
                   if (options.impliedArray) {
-                    return valueStack.popArrayValue();
+                    return valueStack.popArrayValue(options);
                   }
                   if (options.impliedObject) {
-                    return valueStack.popObjectValue();
+                    return valueStack.popObjectValue(options);
                   }
                   throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, errpos));
                 }
@@ -1449,7 +1456,7 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
         }
         if (chars.done()) {
           if (stateStack.depth() === 0 && options.impliedArray) {
-            return valueStack.popArrayValue(lv);
+            return valueStack.popArrayValue(options, lv);
           }
           throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, end));
         }
@@ -1459,7 +1466,7 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
         continue;
 
       case STATE_ARRAY_AFTER_ELEMENT:
-        valueStack.popArrayValue();
+        valueStack.popArrayValue(options);
 
         switch (chars.structChar()) {
           case CHAR_AMP:
@@ -1492,10 +1499,10 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
                 //
                 if (chars.done()) {
                   if (options.impliedArray) {
-                    return valueStack.popArrayValue();
+                    return valueStack.popArrayValue(options);
                   }
                   if (options.impliedObject) {
-                    return valueStack.popObjectValue();
+                    return valueStack.popObjectValue(options);
                   }
                   throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, chars.pos));
                 }
@@ -1524,7 +1531,7 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
         }
         if (chars.done()) {
           if (stateStack.depth() === 0 && options.impliedObject) {
-            return valueStack.popObjectValue(lv);
+            return valueStack.popObjectValue(options, lv);
           }
           throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, end));
         }
@@ -1534,7 +1541,7 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
         continue;
 
       case STATE_OBJECT_AFTER_ELEMENT:
-        valueStack.popObjectValue();
+        valueStack.popObjectValue(options);
 
         errpos = chars.pos;
 
@@ -1569,10 +1576,10 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
                 //
                 if (chars.done()) {
                   if (options.impliedArray) {
-                    return valueStack.popArrayValue();
+                    return valueStack.popArrayValue(options);
                   }
                   if (options.impliedObject) {
-                    return valueStack.popObjectValue();
+                    return valueStack.popObjectValue(options);
                   }
                   throw new SyntaxError(Err.fmt(Err.MSG_EXTRACHARS, chars.pos));
                 }
@@ -1596,7 +1603,7 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
         if (chars.done()) {
           if (options.impliedObject && stateStack.depth() == 0) {
             valueStack.push(lv, options.getMissingValue(lv));
-            return valueStack.popObjectValue();
+            return valueStack.popObjectValue(options);
           }
           //
           // I don't know that this is actually possible -- I haven't
@@ -1628,7 +1635,7 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
               // leave the current state in place
               // stateStack.replace(STATE_IN_OBJECT)
               valueStack.push(lv, options.getMissingValue(lv));
-              valueStack.popObjectValue();
+              valueStack.popObjectValue(options);
               continue;
             }
           // fall through

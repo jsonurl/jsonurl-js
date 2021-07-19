@@ -232,6 +232,16 @@ type JsonURLStringifyOptions = {
      * number of values. The default is 4096.
      */
     maxParseValues?: number,
+    /**
+     * @type {boolean} [ignoreNullArrayMembers=false] Ignore null array
+     * members.
+     */
+    ignoreNullArrayMembers?: boolean,
+    /**
+     * @type {boolean} [ignoreNullObjectMembers=false] Ignore null object
+     * members.
+     */
+    ignoreNullObjectMembers?: boolean,
   }
   
   declare class JsonURL {
