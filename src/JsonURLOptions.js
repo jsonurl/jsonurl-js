@@ -39,6 +39,8 @@ export class JsonURLOptions {
     this.setOrDefault(src, "allowEmptyUnquotedKeys");
     this.setOrDefault(src, "AQF");
     this.setOrDefault(src, "coerceNullToEmptyString");
+    this.setOrDefault(src, "ignoreNullArrayMembers");
+    this.setOrDefault(src, "ignoreNullObjectMembers");
     this.setOrDefault(src, "impliedArray");
     this.setOrDefault(src, "impliedObject");
     this.setOrDefault(src, "impliedStringLiterals");
@@ -80,5 +82,12 @@ export class JsonURLOptions {
       key,
       defValue === undefined ? defValue : parseInt(defValue)
     );
+  }
+
+  /**
+   * Evaluates to true if the given `ignore` option is present and truthy.
+   */
+  isPresentAndTrue(key) {
+    return key in this && this[key];
   }
 }

@@ -141,6 +141,10 @@ test.each([
     { coerceNullToEmptyString: true },
     { a: "", null: "d", e: "f" },
   ],
+  ["(a:b,c:null)", { ignoreNullObjectMembers: true }, { a: "b" }],
+  ["(a:null,b:c)", { ignoreNullObjectMembers: true }, { b: "c" }],
+  ["(a,null,c)", { ignoreNullArrayMembers: true }, ["a", "c"]],
+  ["(a,b,null)", { ignoreNullArrayMembers: true }, ["a", "b"]],
 ])("JsonURL.parse(%s,%p)", (text, options, expected) => {
   expect(u.parse(text, options)).toEqual(expected);
   expect(parseAQF(text, options)).toEqual(expected);
