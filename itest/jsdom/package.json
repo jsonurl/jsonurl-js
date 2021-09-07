@@ -20,6 +20,6 @@
   "homepage": "https://www.jsonurl.org/",
   "dependencies": {
     "@jsonurl/jsonurl": "file:../..",
-    "jsdom": "^16.6.0"
+    "jsdom": "^17.0.0"
   }
 }
