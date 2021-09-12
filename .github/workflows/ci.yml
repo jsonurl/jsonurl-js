@@ -82,7 +82,7 @@ jobs:
 
   sonarcloud:
     needs: artifact
-    if: ${{ needs.artifact.result == 'success' && github.repository_owner == 'jsonurl' && ( github.event_name == 'push' || github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR' ) }}
+    if: ${{ needs.artifact.result == 'success' && github.repository_owner == 'jsonurl' && github.actor != 'dependabot' && ( github.event_name == 'push' || github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR' ) }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
