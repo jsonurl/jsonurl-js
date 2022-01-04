@@ -20,8 +20,8 @@
   "homepage": "https://www.jsonurl.org/",
   "dependencies": {
     "@babel/cli": "^7.16.0",
-    "@babel/core": "^7.16.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.16.0",
+    "@babel/core": "^7.16.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.16.5",
     "@jsonurl/jsonurl": "file:../.."
   }
 }
