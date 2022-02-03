@@ -30,13 +30,16 @@ jobs:
         node-version: 16.x
     - name: Cache Node.js modules
       timeout-minutes: 10
-      uses: actions/cache@v1
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
       with:
         path: ~/.npm
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.OS }}-node-
-          ${{ runner.OS }}-
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
     - run: npm ci
     - run: npm run lint
     - run: npm run build
@@ -66,13 +69,16 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: Cache Node.js modules
       timeout-minutes: 10
-      uses: actions/cache@v1
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
       with:
-        path: ~/.npm 
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.OS }}-node-
-          ${{ runner.OS }}-
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
     - run: npm ci
     - run: npm run lint
     - run: npm run build
@@ -82,7 +88,7 @@ jobs:
 
   sonarcloud:
     needs: artifact
-    if: ${{ needs.artifact.result == 'success' && github.repository_owner == 'jsonurl' && github.actor != 'dependabot' && ( github.event_name == 'push' || github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR' ) }}
+    if: ${{ needs.artifact.result == 'success' && github.repository_owner == 'jsonurl' && github.event.repository.fork == false && ( github.event_name == 'push' || github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR' ) }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -97,13 +103,18 @@ jobs:
         node-version: 16.x
     - name: Cache Node.js modules
       timeout-minutes: 10
-      uses: actions/cache@v1
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
       with:
         path: ~/.npm
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.OS }}-node-
-          ${{ runner.OS }}-
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Push Info
+      run: echo Pushed by ${{ github.event.pusher.name }}
     - run: npm ci
     - run: npx eslint -f json -o eslint.report.json
     - run: npm run build
