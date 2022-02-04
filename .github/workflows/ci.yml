@@ -41,7 +41,9 @@ jobs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
     - run: npm ci
-    - run: npm run lint
+    - name: eslint
+      run: ./script/lint.sh
+      shell: bash
     - run: npm run build
     - run: npm test
     - name: Integration Test
@@ -80,7 +82,9 @@ jobs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
     - run: npm ci
-    - run: npm run lint
+    - name: eslint
+      run: ./script/lint.sh
+      shell: bash
     - run: npm run build
     - run: npm test
     - name: Integration Test
