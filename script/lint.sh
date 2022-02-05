@@ -1,9 +1,7 @@
 #!/bin/sh
 
-#NODE_MAJOR=`node --version | sed -n 's/^v\([0-9][0-9]*\).*/\1/p'`
-#ESLINT_MAJOR=`npx eslint --version | sed -n 's/^v\([0-9][0-9]*\).*/\1/p'`
-NODE_MAJOR=10
-ESLINT_MAJOR=7
+NODE_MAJOR=`node --version | sed -n 's/^v\([0-9][0-9]*\).*/\1/p'`
+ESLINT_MAJOR=`npx eslint --version | sed -n 's/^v\([0-9][0-9]*\).*/\1/p'`
 
 if test -z "$NODE_MAJOR" ; then
     echo "Unknown nodejs version"
