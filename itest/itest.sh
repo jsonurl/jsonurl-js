@@ -33,15 +33,15 @@ itest_status() {
 
     test_desc=`sed -n 's/\s*"description"\s*:\s*"\([^"]*\)".*/\1/p' "$test_dir/package.json"`
 
-    echo -n "$test_desc: "
+    test_msg='Success'
 
     if test -z "$test_status" ; then
-        echo Skipped
+        test_msg='Skipped'
     elif test $test_status -ne 0 ; then
-        echo Fail
-    else
-        echo Success
+        test_msg='Fail'
     fi
+
+    echo "$test_desc: $test_msg"
 }
 
 itest_exit() {
