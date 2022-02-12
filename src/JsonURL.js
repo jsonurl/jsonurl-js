@@ -205,6 +205,23 @@ function hexDecode(pos, c) {
   }
 }
 
+function toJsonURLText(obj, ...args) {
+  // if built-in prototype is extended, call toJsonURLText directly
+  if (typeof obj.toJsonURLText === "function") {
+    return obj.toJsonURLText(...args);
+  }
+
+  if (typeof obj === "boolean" || obj instanceof Boolean)
+    return toJsonURLText_Boolean.apply(obj, args);
+  else if (typeof obj === "number" || obj instanceof Number)
+    return toJsonURLText_Number.apply(obj, args);
+  else if (typeof obj === "string" || obj instanceof String)
+    return toJsonURLText_String.apply(obj, args);
+  else if (Array.isArray(obj)) return toJsonURLText_Array.apply(obj, args);
+  else if (obj) return toJsonURLText_Object.apply(obj, args);
+  else return EMPTY_STRING;
+}
+
 function toJsonURLText_Null(options) {
   if (options.coerceNullToEmptyString) {
     return toJsonURLText_EmptyString(options, false);
@@ -344,7 +361,7 @@ function toJsonURLText_Array(options = {}, depth = 0) {
       }
       e = toJsonURLText_Null(options);
     } else {
-      e = e.toJsonURLText(options, depth + 1);
+      e = toJsonURLText(e, options, depth + 1);
     }
 
     if (ret === undefined) {
@@ -398,10 +415,10 @@ function toJsonURLText_Object(options = {}, depth = 0) {
       }
       v = toJsonURLText_Null(options);
     } else {
-      v = v.toJsonURLText(options, depth + 1);
+      v = toJsonURLText(v, options, depth + 1);
     }
 
-    const jk = k.toJsonURLText(options, depth, true);
+    const jk = toJsonURLText(k, options, depth, true);
 
     if (ret === undefined) {
       if (!options.wwwFormUrlEncoded || depth > 0) {
@@ -427,22 +444,6 @@ function toJsonURLText_Object(options = {}, depth = 0) {
 
   return ret === undefined ? EMPTY_STRING : ret;
 }
-
-Object.defineProperty(Array.prototype, "toJsonURLText", {
-  value: toJsonURLText_Array,
-});
-Object.defineProperty(Boolean.prototype, "toJsonURLText", {
-  value: toJsonURLText_Boolean,
-});
-Object.defineProperty(Number.prototype, "toJsonURLText", {
-  value: toJsonURLText_Number,
-});
-Object.defineProperty(Object.prototype, "toJsonURLText", {
-  value: toJsonURLText_Object,
-});
-Object.defineProperty(String.prototype, "toJsonURLText", {
-  value: toJsonURLText_String,
-});
 
 /**
  * Base syntax parser.
@@ -1798,6 +1799,25 @@ export class JsonURL {
       return toJsonURLText_Null(options);
     }
 
-    return value.toJsonURLText(options, 0);
+    return toJsonURLText(value, options, 0);
+  }
+
+  /** Call this method to get prototypes of basic objects extended with toJsonURLText() method */
+  static extendsPrototypes() {
+    Object.defineProperty(Array.prototype, "toJsonURLText", {
+      value: toJsonURLText_Array,
+    });
+    Object.defineProperty(Boolean.prototype, "toJsonURLText", {
+      value: toJsonURLText_Boolean,
+    });
+    Object.defineProperty(Number.prototype, "toJsonURLText", {
+      value: toJsonURLText_Number,
+    });
+    Object.defineProperty(Object.prototype, "toJsonURLText", {
+      value: toJsonURLText_Object,
+    });
+    Object.defineProperty(String.prototype, "toJsonURLText", {
+      value: toJsonURLText_String,
+    });
   }
 }
