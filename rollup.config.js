@@ -25,6 +25,8 @@
 import babel from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
 import { eslint } from "rollup-plugin-eslint";
+import alias from "@rollup/plugin-alias";
+import replace from "@rollup/plugin-replace";
 import pkg from "./package.json";
 
 const banner =
@@ -40,8 +42,26 @@ const banner =
 const babelBundle = {
   babelHelpers: "bundled",
 };
+const noprotoAlias = {
+  entries: [{ find: "./proto.js", replacement: "./noproto.js" }],
+};
 
-export default [
+//
+// Efficienty tweak; call the function directly.
+//
+const toJsonURLText = {
+  delimiters: ["", ""],
+  include: "*/JsonURL.js",
+  preventAssignment: true,
+  values: {
+    " toJsonURLText(e, ": " e.toJsonURLText(",
+    " toJsonURLText(k, ": " k.toJsonURLText(",
+    " toJsonURLText(v, ": " v.toJsonURLText(",
+    " toJsonURLText(value, ": " value.toJsonURLText(",
+  },
+};
+
+const config = [
   {
     input: "src/index.js",
     output: [
@@ -51,7 +71,7 @@ export default [
         format: "umd",
       },
     ],
-    plugins: [eslint(), babel(babelBundle)],
+    plugins: [eslint(), replace(toJsonURLText), babel(babelBundle)],
   },
   {
     input: "src/index.js",
@@ -63,7 +83,7 @@ export default [
         banner: banner,
       },
     ],
-    plugins: [eslint(), babel(babelBundle), terser()],
+    plugins: [eslint(), replace(toJsonURLText), babel(babelBundle), terser()],
   },
   //
   // this covers both ESM and CJS
@@ -79,6 +99,41 @@ export default [
         exports: "default",
       },
     ],
-    plugins: [eslint(), babel(babelBundle)],
+    plugins: [eslint(), replace(toJsonURLText), babel(babelBundle)],
   },
 ];
+
+//
+// create a `.noproto` version of each output
+//
+// debug with: console.dir(n, { depth: null });
+//
+config.push.apply(
+  config,
+  config.map((src) => {
+    const n = {
+      input: src.input,
+      output: src.output.map((e) => {
+        const ret = Object.assign({}, e);
+        ret.file = String(ret.file).replace(/\/jsonurl\./, "/jsonurl.noproto.");
+        return ret;
+      }),
+      plugins: Object.assign([], src.plugins),
+    };
+    n.plugins[1] = alias(noprotoAlias);
+    return n;
+  })
+);
+
+// //
+// // efficienty tweak; call the function directly.
+// //
+// console.dir(
+//   config.map((src) => {
+//     src.plugins.unshift(replace(toJsonURLText));
+//     return src;
+//   }),
+//   { depth: null }
+// );
+
+export default config;

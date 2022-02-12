@@ -29,6 +29,7 @@ import * as Err from "./error.js";
 import * as Chars from "./chars.js";
 import { JsonURLParseOptions } from "./JsonURLParseOptions.js";
 import { JsonURLStringifyOptions } from "./JsonURLStringifyOptions.js";
+import { setupToJsonURLText, toJsonURLText } from "./proto.js";
 
 const RX_DECODE_SPACE = /\+/g;
 const RX_ENCODE_SPACE = / /g;
@@ -203,23 +204,6 @@ function hexDecode(pos, c) {
     default:
       throw new SyntaxError(Err.fmt(Err.MSG_BAD_PCTENC, pos));
   }
-}
-
-function toJsonURLText(obj, ...args) {
-  // if built-in prototype is extended, call toJsonURLText directly
-  if (typeof obj.toJsonURLText === "function") {
-    return obj.toJsonURLText(...args);
-  }
-
-  if (typeof obj === "boolean" || obj instanceof Boolean)
-    return toJsonURLText_Boolean.apply(obj, args);
-  else if (typeof obj === "number" || obj instanceof Number)
-    return toJsonURLText_Number.apply(obj, args);
-  else if (typeof obj === "string" || obj instanceof String)
-    return toJsonURLText_String.apply(obj, args);
-  else if (Array.isArray(obj)) return toJsonURLText_Array.apply(obj, args);
-  else if (obj) return toJsonURLText_Object.apply(obj, args);
-  else return EMPTY_STRING;
 }
 
 function toJsonURLText_Null(options) {
@@ -444,6 +428,14 @@ function toJsonURLText_Object(options = {}, depth = 0) {
 
   return ret === undefined ? EMPTY_STRING : ret;
 }
+
+setupToJsonURLText({
+  toJsonURLText_Array,
+  toJsonURLText_Boolean,
+  toJsonURLText_Number,
+  toJsonURLText_Object,
+  toJsonURLText_String,
+});
 
 /**
  * Base syntax parser.
@@ -1800,24 +1792,5 @@ export class JsonURL {
     }
 
     return toJsonURLText(value, options, 0);
-  }
-
-  /** Call this method to get prototypes of basic objects extended with toJsonURLText() method */
-  static extendsPrototypes() {
-    Object.defineProperty(Array.prototype, "toJsonURLText", {
-      value: toJsonURLText_Array,
-    });
-    Object.defineProperty(Boolean.prototype, "toJsonURLText", {
-      value: toJsonURLText_Boolean,
-    });
-    Object.defineProperty(Number.prototype, "toJsonURLText", {
-      value: toJsonURLText_Number,
-    });
-    Object.defineProperty(Object.prototype, "toJsonURLText", {
-      value: toJsonURLText_Object,
-    });
-    Object.defineProperty(String.prototype, "toJsonURLText", {
-      value: toJsonURLText_String,
-    });
   }
 }
