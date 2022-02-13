@@ -29,6 +29,7 @@ import * as Err from "./error.js";
 import * as Chars from "./chars.js";
 import { JsonURLParseOptions } from "./JsonURLParseOptions.js";
 import { JsonURLStringifyOptions } from "./JsonURLStringifyOptions.js";
+import { setupToJsonURLText, toJsonURLText } from "./proto.js";
 
 const RX_DECODE_SPACE = /\+/g;
 const RX_ENCODE_SPACE = / /g;
@@ -344,7 +345,7 @@ function toJsonURLText_Array(options = {}, depth = 0) {
       }
       e = toJsonURLText_Null(options);
     } else {
-      e = e.toJsonURLText(options, depth + 1);
+      e = toJsonURLText(e, options, depth + 1);
     }
 
     if (ret === undefined) {
@@ -398,10 +399,10 @@ function toJsonURLText_Object(options = {}, depth = 0) {
       }
       v = toJsonURLText_Null(options);
     } else {
-      v = v.toJsonURLText(options, depth + 1);
+      v = toJsonURLText(v, options, depth + 1);
     }
 
-    const jk = k.toJsonURLText(options, depth, true);
+    const jk = toJsonURLText(k, options, depth, true);
 
     if (ret === undefined) {
       if (!options.wwwFormUrlEncoded || depth > 0) {
@@ -428,20 +429,12 @@ function toJsonURLText_Object(options = {}, depth = 0) {
   return ret === undefined ? EMPTY_STRING : ret;
 }
 
-Object.defineProperty(Array.prototype, "toJsonURLText", {
-  value: toJsonURLText_Array,
-});
-Object.defineProperty(Boolean.prototype, "toJsonURLText", {
-  value: toJsonURLText_Boolean,
-});
-Object.defineProperty(Number.prototype, "toJsonURLText", {
-  value: toJsonURLText_Number,
-});
-Object.defineProperty(Object.prototype, "toJsonURLText", {
-  value: toJsonURLText_Object,
-});
-Object.defineProperty(String.prototype, "toJsonURLText", {
-  value: toJsonURLText_String,
+setupToJsonURLText({
+  toJsonURLText_Array,
+  toJsonURLText_Boolean,
+  toJsonURLText_Number,
+  toJsonURLText_Object,
+  toJsonURLText_String,
 });
 
 /**
@@ -1798,6 +1791,6 @@ export class JsonURL {
       return toJsonURLText_Null(options);
     }
 
-    return value.toJsonURLText(options, 0);
+    return toJsonURLText(value, options, 0);
   }
 }
