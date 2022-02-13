@@ -125,15 +125,4 @@ config.push.apply(
   })
 );
 
-// //
-// // efficienty tweak; call the function directly.
-// //
-// console.dir(
-//   config.map((src) => {
-//     src.plugins.unshift(replace(toJsonURLText));
-//     return src;
-//   }),
-//   { depth: null }
-// );
-
 export default config;
