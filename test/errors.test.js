@@ -148,3 +148,15 @@ test.each(["((((1))))", "(1,2,3,4,5,6)", "(100000,100000,100000)"])(
     }).toThrow(/ exceeded(\s+at\s+position\s+\d+)?$/);
   }
 );
+
+test("JsonURL.parse(string) with raw pizza", () => {
+  expect(() => {
+    JsonURL.parse("hello\uD83C\uDF55world");
+  }).toThrow(/unexpected character/);
+
+  expect(() => {
+    JsonURL.parse("hello\uD83C\uDF55world", {
+      AQF: true,
+    });
+  }).toThrow(/unexpected character/);
+});

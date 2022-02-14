@@ -233,3 +233,9 @@ test("JsonURL.parse(null) with custom null value", () => {
     NullValue
   );
 });
+
+test("JsonURL.parse(string) with encoded pizza", () => {
+  expect(JsonURL.parse("hello%F0%9F%8D%95world")).toBe(
+    "hello\uD83C\uDF55world"
+  );
+});
