@@ -176,3 +176,27 @@ test("JsonURL.stringify(object with function)", () => {
     JsonURL.stringify({ fun: nestedHelloWorldFunc }, { callFunctions: true })
   ).toBe("(fun:'Hello,+World!')");
 });
+
+test("JsonURL.stringify(instance specific toJsonURLText function)", () => {
+  const filter = Object.create(
+    {
+      filter: "color",
+      value: "red",
+      // these are transient and shouldn't be serialized
+      isSelected: false,
+      display: "#f93220",
+    },
+    {
+      toJsonURLText: {
+        value: function (...args) {
+          return {
+            filter: this.filter,
+            value: this.value,
+          }.toJsonURLText(...args);
+        },
+      },
+    }
+  );
+
+  expect(JsonURL.stringify(filter)).toBe("(filter:color,value:red)");
+});
