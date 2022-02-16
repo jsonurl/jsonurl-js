@@ -40,9 +40,8 @@ const RX_AQF_DECODE = /(![\s\S]?)/g;
 //
 const RX_ENCODE_STRING_SAFE =
   /^[-A-Za-z0-9._~!$*;=@?/ ][-A-Za-z0-9._~!$*;=@?/' ]*$/;
-const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;=@?/(),: ]+$/;
-const RX_ENCODE_QUOTED_LITERAL =
-  /^(?:true|false|null|(?:[-]?[0-9]+(?:[.][0-9]+)?(?:[eE][-+]?[0-9]+)?))$/;
+const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;=@?/(): ]+$/;
+const RX_ENCODE_NUMBER = /^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/;
 
 const RX_ENCODE_BASE = /[(),:]|%2[04]|%3B/gi;
 const RX_ENCODE_BASE_MAP = {
@@ -205,6 +204,13 @@ function hexDecode(pos, c) {
   }
 }
 
+function isBoolNullNumber(s) {
+  if (s === "true" || s === "false" || s === "null") {
+    return true;
+  }
+  return RX_ENCODE_NUMBER.test(s);
+}
+
 function toJsonURLText_Null(options) {
   if (options.coerceNullToEmptyString) {
     return toJsonURLText_EmptyString(options, false);
@@ -262,7 +268,7 @@ function toJsonURLText_String(options, depth, isKey) {
     return encodeStringLiteral(this, options.AQF);
   }
 
-  if (RX_ENCODE_QUOTED_LITERAL.test(this)) {
+  if (isBoolNullNumber(this)) {
     //
     // if this string looks like a Boolean, Number, or ``null'' literal
     // then it must be quoted
