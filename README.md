@@ -51,8 +51,8 @@ import JsonURL from "@jsonurl/jsonurl";
 
 ```html
 <script
-    src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.1.5"
-    integrity="sha512-PgDMK2pu/5iHU+sUvfCWIKugVg2NLSN1jmQJyJKbQw1MZAMvrU7XX3fPv4FJXgGBxTCsDnjhMmlZK5pzgPndTQ=="
+    src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.1.6"
+    integrity="sha512-XwwFcB+WGRTO/klfJWwRoi0xGhMVvZyioqS1p/kyOyHc9o/EExDVXTCsIwldO05Ad9R9E1zwgNZhVPNNqyhrFQ=="
     crossorigin="anonymous"></script>
 ```
 

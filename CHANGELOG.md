@@ -1,3 +1,24 @@
+# v1.1.6
+
+## New Features
+
+*   Produce build that does not modify prototypes ([@aidenlx](https://github.com/aidenlx "Link to profile for user aidenlx")), ([@dmaccormack](https://github.com/dmaccormack "Link to profile for user dmaccormack"))
+
+## Dependency Updates
+
+The following dependencies were updated:
+*   upgrade @babel/core from 7.14.5 to 7.17.5
+*   upgrade @babel/cli from 7.14.5 to 7.17.3
+*   upgrade @babel/plugin-transform-modules-commonjs from 7.14.5 to 7.16.7
+*   upgrade @babel/preset-env from 7.14.5 to 7.16.11
+*   upgrade babel-jest from 27.1.0 to 27.5.1
+*   upgrade eslint-plugin-jest from 24.4.0 to 26.1.1
+*   upgrade jest from 27.1.1 to 27.5.1
+*   upgrade jsdoc from 3.6.7 to 3.6.10
+*   upgrade jsdom from 16.6.0 to 17.0.0
+*   upgrade rollup from 2.56.3 to 2.67.3
+*   upgrade typescript from 4.4.2 to 4.5.5
+
 # v1.1.5
 
 ## Bug Fix
