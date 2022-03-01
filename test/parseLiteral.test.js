@@ -73,6 +73,7 @@ function runTestAQF(text, value, strLitValue) {
 //
 const u = new JsonURL();
 
+// eslint-disable-next-line jest/expect-expect
 test.each([
   //
   // boolean
@@ -146,6 +147,7 @@ test.each([
   runTestAQF(textAQF, value, keyValue);
 });
 
+// eslint-disable-next-line jest/expect-expect
 test.each([
   //
   // fixed point
