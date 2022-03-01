@@ -53,7 +53,8 @@ test.each([
     {
       impliedObject: {},
       getMissingValue: (key) => {
-        switch (key) {
+        // eslint-disable-next-line prettier/prettier
+        switch (key) {//NOSONAR
           case "a":
             return true;
           default:
@@ -68,7 +69,8 @@ test.each([
     {
       impliedObject: {},
       getMissingValue: (key) => {
-        switch (key) {
+        // eslint-disable-next-line prettier/prettier
+        switch (key) {//NOSONAR
           case "c":
             return true;
           default:
@@ -131,7 +133,7 @@ test.each([
   ["a&(a:b)&", { impliedArray: [] }, ["a", { a: "b" }]],
   [
     "a&&c=d",
-    { impliedObject: {}, getMissingValue: (k) => (k === "a" && true) || false },
+    { impliedObject: {}, getMissingValue: (k) => k === "a" || false },
     { a: true, c: "d" },
   ],
 ])("JsonURL.parse(%p, %p)", (text, options, expected) => {
