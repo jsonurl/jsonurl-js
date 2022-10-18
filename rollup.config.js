@@ -24,7 +24,6 @@
 
 import babel from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
-import { eslint } from "rollup-plugin-eslint";
 import alias from "@rollup/plugin-alias";
 import replace from "@rollup/plugin-replace";
 import pkg from "./package.json";
@@ -71,7 +70,7 @@ const config = [
         format: "umd",
       },
     ],
-    plugins: [eslint(), replace(toJsonURLText), babel(babelBundle)],
+    plugins: [replace(toJsonURLText), babel(babelBundle)],
   },
   {
     input: "src/index.js",
@@ -83,7 +82,7 @@ const config = [
         banner: banner,
       },
     ],
-    plugins: [eslint(), replace(toJsonURLText), babel(babelBundle), terser()],
+    plugins: [replace(toJsonURLText), babel(babelBundle), terser()],
   },
   //
   // this covers both ESM and CJS
@@ -99,7 +98,7 @@ const config = [
         exports: "default",
       },
     ],
-    plugins: [eslint(), replace(toJsonURLText), babel(babelBundle)],
+    plugins: [replace(toJsonURLText), babel(babelBundle)],
   },
 ];
 

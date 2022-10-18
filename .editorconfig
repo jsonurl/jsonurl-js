@@ -10,4 +10,5 @@ charset = utf-8
 
 [*.{json,js,mjs,cjs}]
 indent_size = 2
+max_line_length = 80
 
