@@ -1,3 +1,11 @@
+# v1.1.7
+
+## Bug Fixes
+
+*   Drop support for Node 10.x ([@dmaccormack](https://github.com/dmaccormack "Link to profile for user dmaccormack"))
+*   Fix parse when the last value of an implied AQF object/array is falsey ([@dmaccormack](https://github.com/dmaccormack "Link to profile for user dmaccormack"))
+*   Update multiple build dependencies
+
 # v1.1.6
 
 ## New Features
@@ -7,6 +15,7 @@
 ## Dependency Updates
 
 The following dependencies were updated:
+
 *   upgrade @babel/core from 7.14.5 to 7.17.5
 *   upgrade @babel/cli from 7.14.5 to 7.17.3
 *   upgrade @babel/plugin-transform-modules-commonjs from 7.14.5 to 7.16.7
