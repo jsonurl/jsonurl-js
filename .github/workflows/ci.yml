@@ -27,12 +27,12 @@ jobs:
       run: script/version_snapshot.sh
       shell: bash
     - name: Use Node.js 18.x
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: 18.x
     - name: Cache Node.js modules
       timeout-minutes: 10
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       env:
         cache-name: cache-node-modules
       with:
@@ -51,7 +51,7 @@ jobs:
     - name: Integration Test
       run: cd itest && ./itest.sh
     - name: Package artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: success()
       with:
         name: jsonurl-javascript
@@ -68,12 +68,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Node.js  ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
     - name: Cache Node.js modules
       timeout-minutes: 10
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       env:
         cache-name: cache-node-modules
       with:
@@ -104,12 +104,12 @@ jobs:
       run: script/version_snapshot.sh
       shell: bash
     - name: Use Node.js 18.x
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: 18.x
     - name: Cache Node.js modules
       timeout-minutes: 10
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       env:
         cache-name: cache-node-modules
       with:
@@ -126,7 +126,7 @@ jobs:
     - run: npm run build
     - run: npm test
     - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@v1.6
+      uses: sonarsource/sonarcloud-github-action@v1.7
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
