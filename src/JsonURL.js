@@ -1109,8 +1109,8 @@ class ValueStack extends Array {
    * Pop an object key/value off the stack and assign the value in a target.
    * @returns the target
    */
-  popObjectValue(options, value) {
-    value = value || this.pop();
+  popObjectValue(options) {
+    let value = this.pop();
     let key = this.pop();
     let target = this[this.length - 1];
 
@@ -1128,8 +1128,8 @@ class ValueStack extends Array {
    * Pop a value off the stack and append it to a target.
    * @returns the target
    */
-  popArrayValue(options, value) {
-    value = value || this.pop();
+  popArrayValue(options) {
+    let value = this.pop();
     let target = this[this.length - 1];
 
     if (value !== null || !options.isPresentAndTrue("ignoreNullArrayMembers")) {
@@ -1455,7 +1455,8 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
         }
         if (chars.done()) {
           if (stateStack.depth() === 0 && options.impliedArray) {
-            return valueStack.popArrayValue(options, lv);
+            valueStack.push(lv);
+            return valueStack.popArrayValue(options);
           }
           throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, end));
         }
@@ -1530,7 +1531,8 @@ function parse(text, offsetOrOpt, endOrOpt, options, limits) {
         }
         if (chars.done()) {
           if (stateStack.depth() === 0 && options.impliedObject) {
-            return valueStack.popObjectValue(options, lv);
+            valueStack.push(lv);
+            return valueStack.popObjectValue(options);
           }
           throw new SyntaxError(Err.fmt(Err.MSG_STILLOPEN, end));
         }
