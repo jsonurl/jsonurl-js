@@ -52,7 +52,7 @@ import JsonURL from "@jsonurl/jsonurl";
 ```html
 <script
     src="https://cdn.jsdelivr.net/npm/@jsonurl/jsonurl@1.1.7"
-    integrity="sha512-5dbEkq6X5f3wvvLg43JjSbTU90d/UPu8VV+aFmlPnqKgoUZJlq4hmug6EelX7TJgLLsqtm0VMooPMH1Vd1O3Vg=="
+    integrity="sha512-ZkCdWNHe73NUE5JGh5np0nCwazEu8jRG/bTT24zEeY825xMnhVlwKK29TWyYkvS1vT/gOFJtH4mK1Uns3yW+Wg=="
     crossorigin="anonymous"></script>
 ```
 
