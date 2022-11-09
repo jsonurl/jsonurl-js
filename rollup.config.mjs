@@ -23,10 +23,10 @@
 */
 
 import babel from "@rollup/plugin-babel";
-import { terser } from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 import alias from "@rollup/plugin-alias";
 import replace from "@rollup/plugin-replace";
-import pkg from "./package.json";
+import pkg from "./package.json" assert {type: "json"};
 
 const banner =
   "/*!\n" +
