@@ -68,6 +68,9 @@ itest es6-babel || test_es6babel_status=1
 test_jsdom_status=0
 itest jsdom || test_jsdom_status=1
 
+test_es6ts_status=0
+itest es6-ts || test_es6ts_status=1
+
 #
 # This test depends on the version of node.
 #   node < 11  : no support for native ES6 modules
@@ -93,11 +96,13 @@ itest_status cjs $test_cjs_status
 itest_status es6-babel $test_es6babel_status
 itest_status es6-native $test_es6native_status
 itest_status jsdom $test_jsdom_status
+itest_status es6-ts $test_es6ts_status
 
 itest_exit cjs $test_cjs_exit
 itest_exit es6-babel $test_es6babel_exit
 itest_exit es6-native $test_es6native_exit
 itest_exit jsdom $test_jsdom_exit
+itest_exit es6-ts $test_es6ts_exit
 
 exit 0
 
