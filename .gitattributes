@@ -6,6 +6,7 @@
 *.htm		text diff=html eol=lf
 *.html		text diff=html eol=lf
 *.js		text eol=lf
+*.ts		text eol=lf
 *.mjs		text eol=lf
 *.cjs		text eol=lf
 *.json		text eol=lf
