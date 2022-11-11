@@ -77,7 +77,31 @@ let value = JsonURL.parse( "(Hello:Address Bar!!)",  { AQF: true });
 let string = JsonURL.stringify( value,  { AQF: true } );
 ```
 
-There are additional options available, but that's all you need to get started.
+### Options - noEmptyComposite
+
+The JSON→URL specification defines the empty composite value, `()`, because an
+empty array is indistinguishable from an empty object. This works well in
+practice, generally, but it can lead to counterintuitive results when parsing
+JSON→URL text into a language-native object and then stringifying it back
+into JSON→URL text; the input text doesn't "round-trip" back to
+itself as expected.
+
+The `noEmptyComposite` parse option causes the character sequence `()` to be
+parsed as an empty array, and the character sequence `(:)` to be parsed as an
+empty object. And the `noEmptyComposite` stringify option instructs
+`stringify` to generate those strings appropriately.
+
+[![RunKit: noEmptyComposite](https://img.shields.io/badge/RunKit-noEmptyComposite-ff69b4)][runkit3]
+
+```js
+let value = JsonURL.parse( "(Array:(true,false,(nested),()),Object:(nested:(:)))",  { AQF: true, noEmptyComposite: true });
+let string = JsonURL.stringify( value,  { AQF: true, noEmptyComposite: true });
+```
+
+### Options - More
+
+There are additional options available. The [typescript definition][dts] file
+is a good place to learn more.
 
 JSON→URL has no runtime dependencies.
 
@@ -99,6 +123,10 @@ set by default.
 [runkit1]: https://runkit.com/jsonurl/hello-world
 
 [runkit2]: https://runkit.com/jsonurl/hello-aqf
+
+[runkit3]: https://runkit.com/jsonurl/noemptycomposite
+
+[dts]: https://github.com/jsonurl/jsonurl-js/blob/main/jsonurl.d.ts
 
 ## License
 
