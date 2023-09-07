@@ -94,6 +94,7 @@ test.each([
   [",,,", "',,,'", "%2C%2C%2C", "!,!,!,"],
   ["   ", "+++", undefined, undefined],
   ["Bob & Frank", "Bob+%26+Frank", undefined, undefined],
+  ["Bob = Frank", "Bob+%3D+Frank", undefined, undefined],
   ["'hello", "%27hello", "'hello", undefined],
   [1e5, "100000", undefined, undefined],
 ])("JsonURL.stringify(%p)", (value, expected, expectedISL, expectedAQF) => {

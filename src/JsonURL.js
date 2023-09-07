@@ -40,8 +40,8 @@ const RX_AQF_DECODE = /(![\s\S]?)/g;
 // DO NOT PUT //g ON THESE!!!
 //
 const RX_ENCODE_STRING_SAFE =
-  /^[-A-Za-z0-9._~!$*;=@?/ ][-A-Za-z0-9._~!$*;=@?/' ]*$/;
-const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;=@?/(): ]+$/;
+  /^[-A-Za-z0-9._~!$*;@?/ ][-A-Za-z0-9._~!$*;@?/' ]*$/;
+const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;@?/(): ]+$/;
 const RX_ENCODE_NUMBER = /^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/;
 
 const RX_ENCODE_BASE = /[(),:]|%2[04]|%3B/gi;
@@ -289,7 +289,7 @@ function toJsonURLText_String(options, depth, isKey) {
 
     //
     // if the string needs to be encoded then it no longer looks like a
-    // literal and does not needs to be quoted.
+    // literal and does not need to be quoted.
     //
     return encodeURIComponent(this);
   }
