@@ -28,8 +28,6 @@
   This defines global options. The ./src directory extends this file.
 */
 
-const esmConfigFiles = ["rollup.config.js"];
-
 module.exports = {
   root: true,
   extends: ["eslint:recommended", "plugin:prettier/recommended"],
@@ -41,12 +39,6 @@ module.exports = {
     "prettier/prettier": ["error", { endOfLine: "auto" }],
   },
   overrides: [
-    {
-      files: esmConfigFiles,
-      parserOptions: {
-        sourceType: "module",
-      },
-    },
     {
       files: ["*.config.js", ".eslintrc.js", ".eslintrc.cjs"],
       env: {
