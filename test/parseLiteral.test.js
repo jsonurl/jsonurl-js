@@ -173,6 +173,7 @@ test.each([
   ["-e+1", "-e 1", undefined, undefined],
   ["1e%2B1", "1e+1", 10, "1e+1"],
   ["%26true", "&true", undefined, undefined],
+  ["%3Dtrue", "=true", undefined, undefined],
 ])("JsonURL.parseLiteral(%p)", (text, value, aqfValue, strLitValue) => {
   let keyValue = typeof value === "string" ? value : text;
   if (aqfValue === undefined) {
