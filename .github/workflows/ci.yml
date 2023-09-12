@@ -22,7 +22,7 @@ jobs:
   artifact:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set artifact version
       run: script/version_snapshot.sh
       shell: bash
@@ -66,7 +66,7 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
         node-version: [16.x, 18.x, 20.x]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Node.js  ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
@@ -97,7 +97,7 @@ jobs:
     if: ${{ needs.artifact.result == 'success' && github.event.repository.fork == false && ( github.event_name == 'push' || github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR' ) }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Set artifact version
@@ -126,7 +126,7 @@ jobs:
     - run: npm run build
     - run: npm test
     - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@v1.7
+      uses: sonarsource/sonarcloud-github-action@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
