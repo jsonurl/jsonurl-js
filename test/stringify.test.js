@@ -82,7 +82,7 @@ test.each([
   ["2e1", "'2e1'", "2e1", "!2e1"],
   ["-4", "'-4'", "-4", "!-4"],
   ["5a", undefined, undefined, undefined],
-  ["'1+2'", "%271%2B2'", "'1%2B2'", undefined],
+  ["'1+2'", "%271%2B2'", "'1%2B2'", "'1!+2'"],
   ["1e+1", "1e%2B1", undefined, "1e!+1"],
   ["a b c", "a+b+c", undefined, undefined],
   ["a,b", "'a,b'", "a%2Cb", "a!,b"],
@@ -201,3 +201,78 @@ test("JsonURL.stringify(instance specific toJsonURLText function)", () => {
 
   expect(JsonURL.stringify(filter)).toBe("(filter:color,value:red)");
 });
+
+test.each([
+  //
+  // string
+  //
+  [
+    "1e+3",
+    "1e%2B3",
+    "1e!+3",
+    "1e%2B3",
+    "1e!+3",
+    "1e%2B3",
+    "1e%2B3",
+    "1e!+3",
+    "1e!+3",
+  ],
+  [
+    "1e 3",
+    "'1e+3'",
+    "!1e+3",
+    "1e+3",
+    "1e+3",
+    "'1e+3'",
+    "1e+3",
+    "!1e+3",
+    "1e+3",
+  ],
+])(
+  "JsonURL.stringifyLiteralAndKey(%p)",
+  (
+    text,
+    expectedKey,
+    expectedKeyAqf,
+    expectedKeyIsl,
+    expectedKeyIslAqf,
+    expected,
+    expectedImpliedStringLiteral,
+    expectedAqf,
+    expectedImpliedStringAqf
+  ) => {
+    function makeObject(s) {
+      const ret = {};
+      ret[s] = 1;
+      return ret;
+    }
+    function makeText(s) {
+      return "(" + s + ":1)";
+    }
+
+    expect(JsonURL.stringify(makeObject(text))).toEqual(makeText(expectedKey));
+    expect(JsonURL.stringify(makeObject(text), { AQF: true })).toEqual(
+      makeText(expectedKeyAqf)
+    );
+    expect(
+      JsonURL.stringify(makeObject(text), {
+        impliedStringLiterals: true,
+      })
+    ).toEqual(makeText(expectedKeyIsl));
+    expect(
+      JsonURL.stringify(makeObject(text), {
+        AQF: true,
+        impliedStringLiterals: true,
+      })
+    ).toEqual(makeText(expectedKeyIslAqf));
+
+    expect(JsonURL.stringify(text)).toBe(expected);
+    expect(JsonURL.stringify(text, { impliedStringLiterals: true })).toBe(
+      expectedImpliedStringLiteral
+    );
+    expect(JsonURL.stringify(text, { AQF: true })).toBe(expectedAqf);
+    expect(
+      JsonURL.stringify(text, { AQF: true, impliedStringLiterals: true })
+    ).toBe(expectedImpliedStringAqf);
+  }
+);

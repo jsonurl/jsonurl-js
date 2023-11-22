@@ -45,13 +45,12 @@ function escapeStringAQF(s) {
     .replace(/:/, "!:");
 }
 
-function runTest(text, value, keyValue, strLitValue) {
+function runTest(text, value, keyValue, impliedStrValue) {
   expect(u.parseLiteral(text)).toBe(value);
-  expect(JsonURL.parse(text)).toBe(value);
   expect(u.parseLiteral(text, 0, text.length, true)).toBe(keyValue);
   expect(
     u.parseLiteral(text, 0, text.length, true, { impliedStringLiterals: true })
-  ).toBe(strLitValue);
+  ).toBe(impliedStrValue);
 
   //
   // verify that parseLiteral() and parse() return the same thing (as
@@ -61,10 +60,10 @@ function runTest(text, value, keyValue, strLitValue) {
   expect(JsonURL.parse(text)).toBe(value);
 }
 
-function runTestAQF(text, value, strLitValue) {
+function runTestAQF(text, value, impliedStrValue) {
   expect(u.parse(text, { AQF: true })).toBe(value);
   expect(u.parse(text, { AQF: true, impliedStringLiterals: true })).toBe(
-    strLitValue
+    impliedStrValue
   );
 }
 
@@ -147,7 +146,6 @@ test.each([
   runTestAQF(textAQF, value, keyValue);
 });
 
-// eslint-disable-next-line jest/expect-expect
 test.each([
   //
   // fixed point
@@ -155,6 +153,8 @@ test.each([
   ["-3e0", -3, undefined, "-3e0"],
   ["1e+2", 1e2, undefined, "1e 2"],
   ["-2e+1", -2e1, undefined, "-2e 1"],
+  ["1e-2", 1e-2, undefined, "1e-2"],
+  ["1e+2", 1e2, undefined, "1e 2"],
 
   //
   // floating point
@@ -164,26 +164,33 @@ test.each([
   //
   // string
   //
-  ["'hello'", "hello", "'hello'", undefined],
+  ["'hello'", "hello", "'hello'", "'hello'"],
   ["hello%2Bworld", "hello+world", undefined, undefined],
   ["y+%3D+mx+%2B+b", "y = mx + b", undefined, undefined],
   ["a%3Db%26c%3Dd", "a=b&c=d", undefined, undefined],
   ["hello%F0%9F%8D%95world", "hello\uD83C\uDF55world", undefined, undefined],
   ["-e+", "-e ", undefined, undefined],
   ["-e+1", "-e 1", undefined, undefined],
-  ["1e%2B1", "1e+1", 10, "1e+1"],
+  ["1e%2B1", "1e+1", "1e+1", "1e+1"],
   ["%26true", "&true", undefined, undefined],
   ["%3Dtrue", "=true", undefined, undefined],
-])("JsonURL.parseLiteral(%p)", (text, value, aqfValue, strLitValue) => {
+])("JsonURL.parseLiteral(%p)", (text, value, aqfValue, impliedStrValue) => {
   let keyValue = typeof value === "string" ? value : text;
   if (aqfValue === undefined) {
     aqfValue = value;
   }
-  if (strLitValue === undefined) {
-    strLitValue = aqfValue;
-  }
-  runTest(text, value, keyValue, strLitValue);
-  runTestAQF(text, aqfValue, strLitValue);
+
+  runTest(
+    text,
+    value,
+    keyValue,
+    impliedStrValue === undefined ? keyValue : impliedStrValue
+  );
+
+  expect(u.parse(text, { AQF: true })).toBe(aqfValue);
+  expect(u.parse(text, { AQF: true, impliedStringLiterals: true })).toBe(
+    impliedStrValue === undefined ? aqfValue : impliedStrValue
+  );
 });
 
 test("JsonURL.parseLiteral('null')", () => {
