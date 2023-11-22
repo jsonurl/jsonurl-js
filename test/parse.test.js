@@ -96,7 +96,6 @@ test.each([
   ["('Hello,+(World)!')", ["Hello, (World)!"]],
   ["('','')", ["", ""]],
   ["('qkey':g)", { qkey: "g" }],
-  ["1e%2B1", "1e+1"],
 ])("JsonURL.parse(%s)", (text, expected) => {
   expect(u.parse(text)).toEqual(expected);
   expect(JsonURL.parse(text)).toEqual(expected);
@@ -116,7 +115,6 @@ test.each([
   ["('Hello!,+!(World!)!!')", ["'Hello, (World)!'"]],
   ["(!e,!e)", ["", ""]],
   ["(!e:g)", { "": "g" }],
-  ["1e%2B1", 10],
   ["%48%45%4C%4C%4F%21,+%57%4F%52%4C%44!!", "HELLO, WORLD!"],
   ["%28%61%3A%62%2C%63%3A%64%29", { a: "b", c: "d" }],
   ["%28%61%2C%62%2C%63%2c%64%29", ["a", "b", "c", "d"]],
@@ -149,6 +147,96 @@ test.each([
   expect(u.parse(text, options)).toEqual(expected);
   expect(parseAQF(text, options)).toEqual(expected);
 });
+
+//
+// Test edge cases for number-like strings combined with various options
+//
+test.each([
+  [
+    "1e+1",
+    "1e%2B1",
+    "1e!+1",
+    "1e%2B1",
+    "1e!+1",
+    "1e%2B1",
+    "1e%2B1",
+    "1e!+1",
+    "1e!+1",
+  ],
+  [
+    "1e+3",
+    "1e+3",
+    "1e+3",
+    "1e%2B3",
+    "1e!+3",
+    "1e%2B3",
+    "1e%2B3",
+    "1e!+3",
+    "1e!+3",
+  ],
+  [
+    "1e 3",
+    "'1e+3'",
+    "!1e+3",
+    "1e+3",
+    "1e+3",
+    "'1e+3'",
+    "1e+3",
+    "!1e+3",
+    "1e+3",
+  ],
+])(
+  "JsonURL.parseNumberLikeString(%p)",
+  (
+    expected,
+    inputKey,
+    inputKeyAqf,
+    inputKeyIsl,
+    inputKeyIslAqf,
+    inputBase,
+    inputImpliedStringLiteral,
+    inputAqf,
+    inputImpliedStringAqf
+  ) => {
+    function makeObject(s) {
+      const ret = {};
+      ret[s] = "a";
+      return ret;
+    }
+    function makeText(s) {
+      return "(" + s + ":a)";
+    }
+
+    expect(JsonURL.parse(makeText(inputKey))).toEqual(makeObject(expected));
+    expect(JsonURL.parse(makeText(inputKeyAqf), { AQF: true })).toEqual(
+      makeObject(expected)
+    );
+    expect(
+      JsonURL.parse(makeText(inputKeyIsl), { impliedStringLiterals: true })
+    ).toEqual(makeObject(expected));
+
+    expect(
+      JsonURL.parse(makeText(inputKeyIslAqf), {
+        AQF: true,
+        impliedStringLiterals: true,
+      })
+    ).toEqual(makeObject(expected));
+
+    expect(u.parse(inputBase)).toBe(expected);
+    expect(
+      u.parse(inputImpliedStringLiteral, { impliedStringLiterals: true })
+    ).toBe(expected);
+    expect(u.parse(inputAqf, { AQF: true })).toBe(expected);
+    expect(
+      u.parse(inputImpliedStringAqf, { AQF: true, impliedStringLiterals: true })
+    ).toBe(expected);
+  }
+);
+
+/*
+(text, value, aqfValue, impliedStrValue) => {
+
+*/
 
 test.each([undefined])("JsonURL.parse(%p)", (text) => {
   expect(u.parse(text)).toBeUndefined();

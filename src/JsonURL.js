@@ -33,7 +33,7 @@ import { setupToJsonURLText, toJsonURLText } from "./proto.js";
 
 const RX_DECODE_SPACE = /\+/g;
 const RX_ENCODE_SPACE = / /g;
-const RX_AQF_DECODE = /(![\s\S]?)/g;
+const RX_AQF_DECODE_ESCAPE = /(![\s\S]?)/g;
 
 //
 // patterns for use with RegEx.test().
@@ -42,7 +42,9 @@ const RX_AQF_DECODE = /(![\s\S]?)/g;
 const RX_ENCODE_STRING_SAFE =
   /^[-A-Za-z0-9._~!$*;=@?/ ][-A-Za-z0-9._~!$*;=@?/' ]*$/;
 const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;=@?/(): ]+$/;
-const RX_ENCODE_NUMBER = /^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/;
+const RX_ENCODE_NUMBER = /^-?\d+(?:\.\d+)?(?:[eE][-]?\d+)?$/;
+const RX_ENCODE_NUMBER_PLUS = /^-?\d+(?:\.\d+)?[eE]\+\d+$/;
+const RX_ENCODE_NUMBER_SPACE = /^-?\d+(?:\.\d+)?[eE] \d+$/;
 
 const RX_ENCODE_BASE = /[(),:]|%2[04]|%3B/gi;
 const RX_ENCODE_BASE_MAP = {
@@ -55,7 +57,7 @@ const RX_ENCODE_BASE_MAP = {
   "%3B": ";",
 };
 
-const RX_ENCODE_AQF = /[!(),:]|%2[01489C]|%3[AB]/gi;
+const RX_ENCODE_AQF = /[!(),:]|%2[01489BC]|%3[AB]/gi;
 const RX_ENCODE_AQF_MAP = {
   "%20": "+",
   "%21": "!!",
@@ -66,6 +68,7 @@ const RX_ENCODE_AQF_MAP = {
   "%29": "!)",
   ")": "!)",
   "+": "!+",
+  "%2B": "!+",
   "%2C": "!,",
   ",": "!,",
   "%3A": "!:",
@@ -131,6 +134,7 @@ UNESCAPE[CHAR_n] = "n";
 const EMPTY_STRING = "";
 const EMPTY_STRING_AQF = "!e";
 const SPACE = " ";
+const PLUS = "+";
 
 function newEmptyString(pos, emptyOK) {
   if (emptyOK) {
@@ -205,7 +209,17 @@ function hexDecode(pos, c) {
   }
 }
 
-function isBoolNullNumber(s) {
+function isBang(s, offset) {
+  return (
+    s.charCodeAt(offset - 1) === CHAR_BANG ||
+    (offset > 2 &&
+      s.charCodeAt(offset - 3) === CHAR_PERCENT &&
+      s.charCodeAt(offset - 2) === CHAR_0 + 2 &&
+      s.charCodeAt(offset - 1) === CHAR_0 + 1)
+  );
+}
+
+function isBoolNullNoPlusNumber(s) {
   if (s === "true" || s === "false" || s === "null") {
     return true;
   }
@@ -269,30 +283,41 @@ function toJsonURLText_String(options, depth, isKey) {
     return encodeStringLiteral(this, options.AQF);
   }
 
-  if (isBoolNullNumber(this)) {
+  if (isBoolNullNoPlusNumber(this)) {
     //
-    // if this string looks like a Boolean, Number, or ``null'' literal
-    // then it must be quoted
+    // this string looks like a boolean, `null`, or number literal without
+    // a plus char
     //
     if (isKey === true) {
+      // keys are assumed to be strings
       return this;
     }
     if (options.AQF) {
-      if (this.indexOf("+") == -1) {
-        return "!" + this;
-      }
-      return this.replace("+", "!+");
+      return "!" + this;
     }
-    if (this.indexOf("+") == -1) {
-      return "'" + this + "'";
-    }
-
-    //
-    // if the string needs to be encoded then it no longer looks like a
-    // literal and does not needs to be quoted.
-    //
-    return encodeURIComponent(this);
+    return "'" + this + "'";
   }
+
+  if (RX_ENCODE_NUMBER_PLUS.test(this)) {
+    //
+    // this string looks like a number with an exponent that includes a `+`
+    //
+    if (options.AQF) {
+      return this.replace(PLUS, "!+");
+    }
+    return this.replace(PLUS, "%2B");
+  }
+  if (RX_ENCODE_NUMBER_SPACE.test(this)) {
+    //
+    // this string would look like a number if it were allowed to have a
+    // space represented as a plus
+    //
+    if (options.AQF) {
+      return "!" + this.replace(SPACE, "+");
+    }
+    return "'" + this.replace(SPACE, "+") + "'";
+  }
+
   if (options.AQF) {
     return encodeStringLiteral(this, true);
   }
@@ -957,10 +982,6 @@ class ParserAQF extends Parser {
     return ret;
   }
 
-  acceptPlus() {
-    return this.accept(CHAR_PLUS);
-  }
-
   findLiteralEnd() {
     const end = this.end;
     const pos = this.pos;
@@ -1025,7 +1046,16 @@ class ParserAQF extends Parser {
     const text = this.text;
     const pos = this.pos;
     const ret = decodeURIComponent(
-      text.substring(pos, litend).replace(RX_DECODE_SPACE, SPACE)
+      text
+        .substring(pos, litend)
+        .replace(RX_DECODE_SPACE, function (match, offset) {
+          if (offset === 0 || !isBang(text, pos + offset)) {
+            return SPACE;
+          }
+          return PLUS;
+          // const c = text.charCodeAt(pos + offset - 1);
+          // return c === CHAR_BANG ? PLUS : SPACE;
+        })
     );
 
     this.pos = litend;
@@ -1034,7 +1064,7 @@ class ParserAQF extends Parser {
       return EMPTY_STRING;
     }
 
-    return ret.replace(RX_AQF_DECODE, function name(match, _p, offset) {
+    return ret.replace(RX_AQF_DECODE_ESCAPE, function (match, _p, offset) {
       if (match.length === 2) {
         const c = match.charCodeAt(1);
         const uc = UNESCAPE[c];
