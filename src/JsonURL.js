@@ -40,8 +40,8 @@ const RX_AQF_DECODE_ESCAPE = /(![\s\S]?)/g;
 // DO NOT PUT //g ON THESE!!!
 //
 const RX_ENCODE_STRING_SAFE =
-  /^[-A-Za-z0-9._~!$*;=@?/ ][-A-Za-z0-9._~!$*;=@?/' ]*$/;
-const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;=@?/(): ]+$/;
+  /^[-A-Za-z0-9._~!$*;@?/ ][-A-Za-z0-9._~!$*;@?/' ]*$/;
+const RX_ENCODE_STRING_QSAFE = /^[-A-Za-z0-9._~!$*,;@?/(): ]+$/;
 const RX_ENCODE_NUMBER = /^-?\d+(?:\.\d+)?(?:[eE][-]?\d+)?$/;
 const RX_ENCODE_NUMBER_PLUS = /^-?\d+(?:\.\d+)?[eE]\+\d+$/;
 const RX_ENCODE_NUMBER_SPACE = /^-?\d+(?:\.\d+)?[eE] \d+$/;
