@@ -37,6 +37,7 @@ module.exports = (api) => {
   }
 
   return {
+    plugins: ["@babel/plugin-syntax-import-assertions"],
     presets: [["@babel/preset-env", opts]],
     exclude: ["node_modules/**"],
   };

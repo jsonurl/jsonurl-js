@@ -22,16 +22,34 @@
   SOFTWARE.
 */
 
-"use strict";
+const babel = require("@babel/eslint-parser");
+const jest = require("eslint-plugin-jest");
+const prettier = require("eslint-plugin-prettier/recommended");
 
-module.exports = {
-  extends: ["../../.eslintrc.js"],
-  overrides: [
-    {
-      files: ["main.js"],
-      env: {
-        node: true,
-      },
+module.exports = [
+  prettier,
+  {
+    ignores: ["coverage/*", "**/dist/*", "apidoc/*", "backup/*"]
+  },
+  {
+    files: ["*.mjs", "src/*.js"],
+    languageOptions: {
+      sourceType: "module",
+      parser: babel,
+      parserOptions: {
+        babelOptions: {
+          configFile: "./babel.config.js"
+        },
+        importAttributes: true
+      }
+    }
+  },
+  {
+    files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+    plugins: {
+      jest,
     },
-  ],
-};
+    ...jest.configs['flat/recommended'],
+  },
+]
+
