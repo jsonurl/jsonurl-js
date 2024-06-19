@@ -1,3 +1,10 @@
+# v1.1.8
+
+## Bug Fixes
+
+*   itest/es6-babel/package.json & itest/es6-babel/package-lock.json to reduce vulnerabilities ([@snyk-bot](https://github.com/snyk-bot "Link to profile for user snyk-bot"))
+*   Fix bug stringifying number-like keys and values (#645) ([@dmaccormack](https://github.com/dmaccormack "Link to profile for user dmaccormack"))
+
 # v1.1.7
 
 ## Bug Fixes
