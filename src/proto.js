@@ -53,7 +53,6 @@ export function setupToJsonURLText({
 // a direct call to `target`. Eslint will see that this function is never
 // called and flag it as an error.
 //
-// eslint-disable-line no-unused-vars
 export function toJsonURLText(target, ...args) {
   return target.toJsonURLText.apply(target, args);
 }
