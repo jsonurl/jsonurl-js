@@ -117,6 +117,7 @@ test.each([
   ["%48%45%4C%4C%4F%21,+%57%4F%52%4C%44!!", "HELLO, WORLD!"],
   ["%28%61%3A%62%2C%63%3A%64%29", { a: "b", c: "d" }],
   ["%28%61%2C%62%2C%63%2c%64%29", ["a", "b", "c", "d"]],
+  ["(text:!-1)", { text: "-1" }],
 ])("JsonURL.parse(%s)", (text, expected) => {
   expect(u.parse(text, { AQF: true })).toEqual(expected);
   expect(JsonURL.parse(text, { AQF: true })).toEqual(expected);
