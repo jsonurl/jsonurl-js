@@ -31,18 +31,23 @@ export function setupToJsonURLText({
 }) {
   Object.defineProperty(Array.prototype, "toJsonURLText", {
     value: toJsonURLText_Array,
+    configurable: true
   });
   Object.defineProperty(Boolean.prototype, "toJsonURLText", {
     value: toJsonURLText_Boolean,
+    configurable: true
   });
   Object.defineProperty(Number.prototype, "toJsonURLText", {
     value: toJsonURLText_Number,
+    configurable: true
   });
   Object.defineProperty(Object.prototype, "toJsonURLText", {
     value: toJsonURLText_Object,
+    configurable: true
   });
   Object.defineProperty(String.prototype, "toJsonURLText", {
     value: toJsonURLText_String,
+    configurable: true
   });
 }
 
